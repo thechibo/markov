@@ -1,0 +1,38 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Availability
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#' @title Availability
+#'
+#' @param x an object of class `MarkovChain`.
+#' @param time integer. The time-step of interest.
+#'
+#' @return numeric. The probability of the system to be available at `time`.
+#' @export
+#'
+#' @inherit MarkovChain examples
+avail <- function(x, time){
+
+  nstate <- length(x$a)
+  nup <- sum(x$a != 0)
+  vec_ones <- rep(c(1, 0), c(nup, nstate - nup))
+
+  as.numeric(x$a %*% Ppower(x$P, time) %*% vec_ones)
+
+}
+
+#' @export
+avail_gsi <- function(n, init, mylist, vec_ones, mat) {
+
+  nstate <- nrow(mylist[[1]])
+  s <- matrix(0, ncol = nstate ^ 2, nrow = 1)
+
+  for (i in 1:n) {
+    tmp <- fastmatrix::kronecker.prod(init %*% mylist[[i]],
+                                      t(mylist[[n - i + 1]] %*% t(vec_ones)))
+    s <- s + tmp
+  }
+
+  s %*% mat %*% t(s)
+
+}

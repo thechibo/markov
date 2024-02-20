@@ -1,0 +1,356 @@
+#
+rm(list=ls())
+#
+library(fitdistrplus)
+library(DiscreteWeibull)
+#library(plotly)
+#library(ggplot2)
+library(abind)
+#library(boot)
+library(snow)
+library(plyr)
+library(grid)
+library(gridExtra)
+library(expm)
+library(extrafont)
+library(doParallel)
+library(foreach)
+library(fastmatrix)
+
+#
+p  <- "C:\\Users\\Eirini VOTSI\\Desktop\\Code_Markov_Chains\\"
+p1 <- "C:\\Users\\Eirini VOTSI\\Desktop\\Code_Markov_Chains\\Functions\\"
+p1 <- file.path(getwd(), "..", "code", "Functions")
+#
+
+files <- Sys.glob(file.path(p1, "*.R"))
+for (i in 1:length(files)){
+source(files[i])
+       }
+#
+setwd(p)
+
+
+###################
+###Simulate Data###
+###################
+
+#Choose the transition probability matrix and the initial law of the MC
+
+trans_prob_theor <- matrix(c(0.3,0.7,0,0.6,0.1,0.3,0.5,0,0.5),nrow=3,ncol=3,byrow=TRUE)
+initial          <- c(0.5,0.5,0)
+
+########################################
+
+#Simulate a single trajectory of length M
+
+M          <- 500                               #length of a trajectory (fixed)
+simul_traj <- simulmarkov(M,trans_prob_theor)   #M: length of the trajectory, trans_kernel: transition probability matrix
+
+########################################
+
+#Choose the up states and calculate the theoretical MTTF
+up               <- c(1,2)
+MTTF_theor       <- MTTF_MC(trans_prob_theor,initial,up)
+
+########################################
+
+#Estimate the transition probability matrix and the MTTF
+
+trans_prob_estim <- trans_kern_estim_MC(simul_traj)
+MTTF_estim       <- MTTF_MC(trans_prob_estim,initial,up)
+
+########################################
+
+K <- 10000                       #number of trajectories
+
+my_list           <- list()
+trans_prob_estim  <- list()
+MTTF_estim        <- list()
+M                 <- 500
+
+########################################
+
+parallel::detectCores()
+n.cores <- parallel::detectCores() - 1
+
+
+#create the cluster
+my.cluster <- parallel::makeCluster(
+  n.cores,
+  type = "PSOCK"
+  )
+
+#register it to be used by %dopar%
+doParallel::registerDoParallel(cl = my.cluster)
+foreach::getDoParWorkers()
+
+
+ptm <- proc.time()
+
+y <- foreach(
+  i = 1:K,
+  .combine = 'c'
+) %dopar% {
+   my_list[[i]]          <- simulmarkov(M,trans_prob_theor)
+   trans_prob_estim[[i]] <- trans_kern_estim_MC(my_list[[i]])
+   MTTF_MC(trans_prob_estim[[i]],initial,up)
+}
+
+proc.time()-ptm
+
+MTTF_estim <- y
+MTTF_norm <- sqrt(M)*(MTTF_estim-rep(MTTF_theor,K))
+var(MTTF_norm)
+
+#################################"
+#Calculate the stationary distribution of the Markov chain
+
+#https://stephens999.github.io/fiveMinuteStats/markov_chains_discrete_stationary_dist.html
+
+pi_bru <- (trans_prob_theor %^% 100)[1,]
+pi_bru
+#pi_bru - pi_bru%*%trans_prob_theor             #verify the result
+
+
+#################################
+#Calculate matrices Lambda et Gamma
+
+#lambda_block_MC(3,trans_prob_theor)
+#Gamma_MC(pi_bru,trans_prob_theor)
+
+Gamma <- Gamma_MC(pi_bru,trans_prob_theor)      #Sadek and Limnios, Proposition 1
+
+#isSymmetric.matrix(Gamma)                      #verify the symmetry
+
+#################################
+
+#Restriction of Gamma on up states:
+
+Gamma_up<-  Gamma[c(1:2,4:5),c(1:2,4:5)]
+
+#################################
+
+#Variance of the MTTF
+
+psi_prime <- deriv_psi(trans_prob_theor,initial,up)
+psi_prime <- as.matrix(psi_prime)
+var_mttf <- t(psi_prime)%*%Gamma_up%*%psi_prime   #Sadek and Limnios, Theorem 8
+
+
+x <- seq(-20,20,0.05)
+hist(MTTF_norm,col="red",freq=FALSE,xlab=expression(widehat(MTTF)(M)),las=1)
+
+curve(dnorm(x,mean=0,sd=sqrt(var_mttf)),add=T,col="blue",lwd=3)
+abline(v=0,col="blue",lty=2,lwd=3)
+
+#It seems that it is ok!
+
+
+#################################
+#Calculate matrix Sigma
+
+n <- 2                                            #choose the power
+
+Sigma1 <-  Sigmaf_MC_MH(trans_prob_theor,n)
+#Sigmaf1 <- Sigma1%*%Gamma%*%t(Sigma1)
+
+
+Sigmaf1  <- Sigma(pi_bru,trans_prob_theor,n)      #Sadek and Limnios, Theorem 4
+
+#isSymmetric.matrix(Sigmaf1)                       #verify the symmetry
+
+
+
+####################################
+
+#Paper with George and Samis
+#Example for nstate=3 and k=2 (power)
+
+
+#Calculate the asymptotic covariance for P^2 (k=2), example paper
+#Section 3.4: asymptotic covariance computation for any number of Markov states
+#nstate = 3
+
+
+#test of the function kronecker.prod, blockMatrixDiagonal
+
+
+P <- trans_prob_theor
+kronecker.prod(diag(3),P)
+blockMatrixDiagonal(P,P,P)
+
+
+P     <- trans_prob_theor
+term1 <- kronecker.prod(P,diag(3))+kronecker.prod(diag(3),t(P))
+term2 <- Gamma
+term3 <- kronecker.prod(t(P),diag(3))+kronecker.prod(diag(3),P)
+cov_final <- term1%*%term2%*%term3                  #covariance
+
+#isSymmetric.matrix(cov_final)                      #verify the symmetry
+
+
+cov_final-Sigmaf1                                  #compare covariance of Theorem 4 with covariance with the new article
+
+
+###################################
+#The same procedure for n=3 (power)
+#just to verify the results
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###################################
+#Availability function
+
+#Monte Carlo simulations
+
+pow_max <- 100
+avail_traj <- list()
+
+for (i in 1:K){
+  avail_traj[[i]] <- avail_simul(M,initial,trans_prob_theor,pow_max)
+}
+
+nmax <- pow_max
+
+avail_traj_mat <- matrix(unlist(avail_traj), ncol = nmax, byrow = TRUE)   #dimension: K*nmax
+
+avail_mean <- apply(avail_traj_mat, 2, mean)
+
+avail_theor <- vector("numeric",length=nmax)
+
+for (i in 1:pow_max){
+  avail_theor[i] <- availability(i,trans_prob_theor,initial)
+}
+
+
+###########################################
+#Calculate the variance of the availability estimator for any fixed "n", Sadek and Limnios, Theorem 5
+
+
+nstate      <- nrow(trans_prob_theor)
+init_avail  <- c(rep(initial[1],nstate),rep(initial[2],nstate),rep(initial[3],nstate))   #new initial vector from the initial vector initial
+
+start.time <- Sys.time()
+
+sigma_availability <- vector("numeric",length=pow_max)
+
+for (i in 1:pow_max){
+    Sigma_f               <- Sigma(pi_bru,trans_prob_theor,i)                     #for any power, calculate the matrix Sigma
+    sigma_availability[i] <- sigma_avail(pi_bru,Sigma_f,i,2,init_avail)           #modify the matrix Sigma, to obtain the variance of the availability
+    rm(Sigma_f)
+}
+
+end.time <- Sys.time()
+
+time.taken <- round(end.time-start.time,2)
+
+s <- sigma_availability
+
+
+##############################################
+#Plot the results
+
+avail_theor <- c(1,avail_theor)
+avail_mean  <- c(1,avail_mean)
+
+quart_up <-   avail_mean+qnorm(0.975)*s/sqrt(M)
+quart_down <- avail_mean-qnorm(0.975)*s/sqrt(M)
+
+
+plot(c(0:pow_max),avail_theor,type="l",las=1,ylab="A(n)",lwd=2,col="blue",xlab="n",ylim=c(0.6,1),xlim=c(0,40),lty="solid")
+lines(c(0:pow_max),avail_mean,col="red",lwd=2)
+lines(c(0:pow_max),quart_up,col="red",lwd=2,lty="dashed")
+lines(c(0:pow_max),quart_down,col="red",lwd=2,lty="dashed")
+
+legend("topright",col=c("blue","red","red","red"),c("theoretical","MLE","upper bound","lower bound"),lwd=c(2,2,1,1),lty=c("solid","solid","dashed","dashed"))
+
+
+##############################################
+
+# Variance of availability according to the formula of the paper with George and Samis
+
+my_list <- list()
+
+for (i in 1:nmax){
+  my_list[[i]] <- trans_prob_theor%^%(i-1)
+}
+
+s              <- matrix(0,ncol=(nstate)^2,nrow=1)
+
+vec_ones_zeros <- matrix(0,ncol=nstate,nrow=1)
+vec_ones_zeros[1:length(up)] <- 1
+
+#avail_gsi(n,initial,my_list,vec_ones_zeros,Gamma)
+
+start.time <- Sys.time()
+
+time <- c(1:nmax)
+
+avail_vec <- unlist(lapply(time,avail_gsi,init=initial,mylist=my_list,vec_ones=vec_ones_zeros,mat=Gamma))
+
+end.time <- Sys.time()
+
+time.taken <- round(end.time-start.time,2)
+
+
+#sigma_availability        #it is the asymptotic variance of the availability function according to the formula of Sadek and Limnios
+avail_vec                  #it >>                    >>                         >>                          >>     George, Samis and Irene
+
+##############################################
+
+#Make the graphical representation of the calculation time difference of the covariance
+#of F^n as a function of n
+
+#calc_diff_time(n,my_list,Gamma)
+
+time <- c(1:nmax)
+calc_diff_vec <- unlist(lapply(time,calc_diff_time,mylist=my_list,mat=Gamma))
+
+plot(time,calc_diff_vec,las=1,xlab="n",ylab="Time difference",type="p",pch=18,col="blue",cex=1.4)
+
+#plot(time,calc_diff_vec,las=1,xlab="n",ylab="Time difference",type="p",pch=19,col="blue",cex=1.2)
+
+
+
+#########################
+
+####################################
+
+#Paper with George and Samis
+#Example for nstate=3 and k=2 (power)
+
+
+#Calculate the asymptotic covariance for P^2 (k=2), example paper
+#Section 3.4: asymptotic covariance computation for any number of Markov states
+#nstate = 3
+
+
+#test of the function kronecker.prod, blockMatrixDiagonal
+
+kronecker.prod(diag(3),P)
+blockMatrixDiagonal(P,P,P)
+
+term1 <- kronecker.prod(P,diag(3))+kronecker.prod(diag(3),t(P))
+term2 <- Gamma
+term3 <- kronecker.prod(t(P),diag(3))+kronecker.prod(diag(3),P)
+cov_final <- term1 %*% term2 %*% term3 #covariance
+
+#isSymmetric.matrix(cov_final) #verify the symmetry
+
+
+cov_final-Sigmaf1 # compare covariance of Theorem 4 with covariance with the new article

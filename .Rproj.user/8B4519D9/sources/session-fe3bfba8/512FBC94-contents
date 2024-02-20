@@ -1,0 +1,157 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Running Script
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Create a Markov Chain
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Choose the transition probability matrix and the initial law of the MC
+a <- c(0.5, 0.5, 0)
+P <- matrix(c(0.3, 0.7, 0,
+              0.6, 0.1, 0.3,
+              0.5, 0,   0.5), nrow = 3, ncol = 3, byrow = TRUE)
+
+# Create a Markov Chain
+x <- MarkovChain(a = a, P = P)
+
+# Find Stationary distribution
+pi_vec <- stationary(x)
+
+# Simulate a single trajectory of length m
+m <- 1e4
+traj <- sim(m, x)
+
+# Estimate the transition probability matrix
+y <- estim(traj)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Calculate Matrices Gamma, Sigma
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Gamma
+# Avar of p_hat (vector)
+Gamma <- gamma_mat(x) # Sadek and Limnios, Proposition 1
+
+# Calculate matrix Sigma
+n <- 2 # choose the power
+Sigmaf1 <- sigma_mat(x, n) # Sadek and Limnios, Theorem 4
+
+####################################
+
+# Paper with George and Samis
+# Example for nstate=3 and k=2 (power)
+
+
+# Calculate the asymptotic covariance for P^2 (k=2), example paper
+# Section 3.4: asymptotic covariance computation for any number of Markov states
+# nstate = 3
+
+library(fastmatrix)
+term1 <- kronecker.prod(P,diag(3))+kronecker.prod(diag(3),t(P))
+term2 <- Gamma
+term3 <- kronecker.prod(t(P),diag(3))+kronecker.prod(diag(3),P)
+cov_final <- term1 %*% term2 %*% term3 #covariance
+
+isSymmetric.matrix(cov_final) #verify the symmetry
+
+cov_final == Sigmaf1 # compare covariance of Theorem 4 with covariance with the new article
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Mean Time to Failure
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Choose the up states
+up <- c(1, 2)
+
+# Calculate the theoretical MTTF
+mttf_true <- mttf(x, up)
+
+# Estimate the MTTF
+mttf_estim <- mttf(y, up)
+
+# Calculate the asymptotic variance
+mttf_var <- mttf_var(x, up)
+
+# Monte Carlo simulations
+set.seed(1)
+k <- 1e4
+mttf_estim <- estim_parallel(k = k, m = m, x = x, fun = markov::mttf,
+                             up = up, a = a)
+mttf_norm <- sqrt(m) * (mttf_estim - rep(mttf_true, k))
+var(mttf_norm)
+
+# Plot
+curve({dnorm(x, mean = 0, sd = sqrt(mttf_var))}, ylab = "Density",
+      xlim = c(min(mttf_norm), max(mttf_norm)), col = "blue", lwd = 3)
+abline(v = 0, col = "blue", lty = 2, lwd = 3)
+hist(mttf_norm,
+     col = rgb(1, 0, 0, 0.1),
+     freq = FALSE,
+     xlab = expression(widehat(MTTF)(m)),
+     nclass = 50,
+     las = 1,
+     add = TRUE)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Availability
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Choose the time and calculate the theoretical Availability
+avail(x, time = 3)
+
+tmax <- 100
+avail_theor <- avail(x, time = 1:tmax)
+
+# Monte Carlo simulations
+avail_estim <- estim_parallel(k = 1e3, m = 500, x = x, fun = avail, time = 1:tmax, a = x$a)
+
+# Is this ok?
+#dimension: K*tmax
+avail_traj_mat <- matrix(avail_estim, ncol = tmax, byrow = TRUE)
+
+avail_mean <- apply(avail_traj_mat, 2, mean)
+
+# Calculate the variance of the availability estimator for any fixed "n"
+s <- numeric(length = tmax)
+for (i in 1:tmax) {
+  s[i] <- avail_var(x, i, 2)
+}
+s
+
+# Plot the results
+
+avail_theor <- c(1, avail_theor)
+avail_mean  <- c(1, avail_mean)
+
+quart_up <- avail_mean + qnorm(0.975) * c(0, s) / sqrt(m)
+quart_down <- avail_mean - qnorm(0.975) * c(0, s) / sqrt(m)
+
+plot(c(0:tmax), avail_theor, type = "l", las = 1, ylab = "A(n)", lwd = 2,
+     col = "blue", xlab = "n", ylim = c(0.6, 1), xlim = c(0, 40), lty = "solid")
+lines(c(0:tmax), avail_mean, col = "red", lwd = 2)
+lines(c(0:tmax), quart_up, col = "red", lwd = 2, lty = "dashed")
+lines(c(0:tmax), quart_down, col = "red", lwd = 2, lty = "dashed")
+
+legend("topright", col = c("blue", "red", "red", "red"),
+       c("theoretical", "MLE", "upper bound", "lower bound"),
+       lwd = c(2, 2, 1, 1), lty = c("solid", "solid", "dashed", "dashed"))
+
+# Variance of availability according to the formula of the paper with George and Samis
+
+my_list <- list()
+
+for (i in 1:tmax){
+  my_list[[i]] <- Ppower(x$P, i - 1)
+}
+
+s <- matrix(0, ncol = nstate ^ 2, nrow = 1)
+
+vec_ones_zeros <- matrix(0, ncol = nstate, nrow = 1)
+vec_ones_zeros[1:length(up)] <- 1
+
+#avail_gsi(n,initial,my_list,vec_ones_zeros,Gamma)
+
+time <- 1:tmax
+
+avail_vec <- unlist(lapply(time,avail_gsi,init=initial,mylist=my_list,vec_ones=vec_ones_zeros,mat=Gamma))

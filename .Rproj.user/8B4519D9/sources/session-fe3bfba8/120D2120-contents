@@ -1,0 +1,14 @@
+sigma_avail <- function(stat,mat_sigma,n,nup,init){
+#
+#This function returns the variance of the availability as a function
+#of the time "n", Theorem 5, Sadek and Limnios
+#
+#mat_sigma : matrix Sigma, Theorem 4, Sadek and Limnios
+#
+tmpa <- cov_avail(stat,mat_sigma,n,nup)   #create the new matrix
+#
+mat  <- t(init)%*%tmpa%*%init
+#
+return(mat)
+#
+}
