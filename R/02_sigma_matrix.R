@@ -38,10 +38,10 @@ sigmaf <- function(P, n) {
 
 #' Title
 #'
-#' @param x
-#' @param n
+#' @param x an object of class `MarkovChain`.
+#' @param n integer.
 #'
-#' @return
+#' @return a matrix.
 #' @export
 #'
 #' @inherit MarkovChain examples

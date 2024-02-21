@@ -2,32 +2,29 @@ Package: markov
 Title: Hidden Markov Models Inference
 Version: 0.0.1
 Authors@R: c(
-    person("Georgios", "Gavrilopoulos", , "your-email-here",
-           role = c("aut"),
+    person("Georgios", "Gavrilopoulos", , "your-email-here", role = "aut",
            comment = c(ORCID = "your-orcid-id-here")),
-    person("Irene", "Votsi", , "your-email-here",
-           role = c("aut"),
+    person("Irene", "Votsi", , "your-email-here", role = "aut",
            comment = c(ORCID = "your-orcid-id-here")),
-    person("Samis", "Trevezas", , "strevezas@math.uoa.gr",
-           role = c("aut"),
+    person("Samis", "Trevezas", , "strevezas@math.uoa.gr", role = "aut",
            comment = c(ORCID = "0000-0003-2262-8299")),
-    person("Ioannis", "Oikonomidis", , "goikon@math.uoa.gr",
-           role = c("aut", "cre"),
+    person("Ioannis", "Oikonomidis", , "goikon@math.uoa.gr", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-8130-2104"))
   )
-Description: This package performs statistical inference on HMM along with reliability indicators.
+Description: This package performs statistical inference on HMM along with
+    reliability indicators.
 License: GPL (>= 3)
 URL: https://thechibo.github.io/markov/
 BugReports: https://github.com/thechibo/markov/issues
 Depends: 
     R (>= 4.0.0)
 Imports:
-    doSNOW,
     doParallel,
-    foreach,
+    doSNOW,
     fastmatrix,
-    progress,
+    foreach,
     methods,
+    progress,
     stats
 Suggests:
     covr,

@@ -7,7 +7,12 @@
 sigma_mat(x, n)
 }
 \arguments{
-\item{n}{}
+\item{x}{an object of class \code{MarkovChain}.}
+
+\item{n}{integer.}
+}
+\value{
+a matrix.
 }
 \description{
 Title
