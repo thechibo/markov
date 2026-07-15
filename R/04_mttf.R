@@ -1,5 +1,5 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Mean Time to Failure
+# Mean Time to Failure                                                      ----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #' Mean Time to Failure
@@ -12,28 +12,47 @@
 #' @export
 #'
 #' @inherit MarkovChain examples
-mttf <- function (x, ...) {
-  UseMethod("mttf", x)
+mttf <- function(x, up) {
+
+  r <- length(up)
+  vec_ones <- rep(1, r)
+  B <- solve(diag(r) - x$P[up, up])
+
+  as.numeric(x$a[up] %*% B %*% vec_ones)
+
 }
 
+#' @rdname mttf
 #' @export
-mttf.MarkovChain <- function(x, up) {
+var_mttf <- function(x, up) {
 
-  # Vector of the conditional mean times to failure
-  vec_ones <- rep(1, length(up))
-  mat <- diag(length(up)) - x$P[up, up]
+  s <- nstates(x)
+  r <- length(up)
+  vec_ones <- rep(1, r)
+  B <- solve(diag(r) - x$P[up, up])
 
-  # Mean Time to Failure
-  as.numeric(x$a[up] %*% solve(mat) %*% vec_ones)
+  M <- kp(x$a[up] %*% B, t(vec_ones) %*% t(B))
+
+  upmat <- matrix(FALSE, nrow = s, ncol = s)
+  upmat[up, up] <- TRUE
+  upvec <- as.vector(upmat)
+
+  as.vector(M %*% mat_gamma(x)[upvec, upvec] %*% t(M))
 
 }
 
 # Sadek and Limnios, Theorem 8
 #' @rdname mttf
 #' @export
-var_mttf <- function(x, up) {
+var_mttf_sl <- function(x, up) {
   psi_prime <- deriv_psi(x, up)
-  t(psi_prime) %*% gamma_mat(x)[up, up] %*% psi_prime
+
+  upmat <- matrix(FALSE, nrow = nstates(x), ncol = nstates(x))
+  upmat[up, up] <- TRUE
+  upvec <- as.vector(upmat)
+
+  as.vector(t(psi_prime) %*% mat_gamma(x)[upvec, upvec] %*% psi_prime)
+
 }
 
 #' @rdname mttf

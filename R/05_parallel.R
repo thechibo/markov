@@ -21,7 +21,7 @@
 #' @export
 #'
 #' @inherit MarkovChain examples
-estim_parallel <- function(k = 1e3, m = 500, x, fun, a = NULL, ...) {
+estim_parallel <- function(x, fun, k = 1e3, m = 500, ...) {
 
   # Preliminaries
   traj <- list()
@@ -39,20 +39,16 @@ estim_parallel <- function(k = 1e3, m = 500, x, fun, a = NULL, ...) {
           format = "Processing [:bar] :elapsed | eta: :eta",
           total = k,
           width = 60)
-  progress <- function(){
+  progress <- function() {
     pb$tick()
   }
   opts <- list(progress = progress)
 
-
   # Estimation for k trajectories
   estim <- foreach::foreach(i = 1:k, .combine = 'c', .options.snow = opts) %dopar% {
-    traj[[i]] <- markov::sim(m, x)
-    y[[i]] <- markov::estim(traj[[i]])
-    # Is the initial law provided?
-    if (!is.null(a)) {
-      y[[i]]$a <- a
-    }
+    traj[[i]] <- markov::mc_sim(m, x)
+    y[[i]] <- markov::mc_estim(traj[[i]])
+    y[[i]]$a <- x$a
     do.call(fun, list(x = y[[i]], ...))
   }
 

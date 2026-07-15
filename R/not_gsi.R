@@ -1,24 +1,3 @@
-avail_simul <- function(M,init,mat,nmax){
-  #
-  #it simulates a trajectory of length M and returns
-  #the availability function for n=1:nmax
-  #M:length of the trajectory
-  #init: initial law
-  #mat: transition probability matrix
-  #nmax: max time for the evaluation of the availability
-  #
-  avail_estim      <- vector("numeric",length=nmax)
-  simul_traj       <- simulmarkov(M,mat)
-  trans_prob_estim <- trans_kern_estim_MC(simul_traj)
-  #
-  for (i in 1:nmax){
-    avail_estim[i] <- availability(i,trans_prob_estim,init)
-  }
-  #
-  return(avail_estim)
-  #
-}
-
 calc_diff_time <- function(n, mylist, mat) {
   #
   #The function returns the difference in the calculation time
