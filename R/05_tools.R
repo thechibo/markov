@@ -132,6 +132,63 @@ get_state_names.default <- function(x, ...) {
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Number of States                 ----
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#' Number of States
+#'
+#' @description
+#' Returns the number of states in a Markov chain or stochastic matrix.
+#'
+#' @param x A `StochVec`, a `StochMat`, or a `MarkovChain` object.
+#' @param ... Additional arguments passed to methods. Currently unused.
+#'
+#' @return A positive integer giving the number of states.
+#'
+#' @examples
+#' P <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE))
+#'
+#' a <- StochVec(c(0.4, 0.6))
+#' x <- MarkovChain(a = a, P = P)
+#' nstates(a)
+#' nstates(P)
+#' nstates(x)
+#'
+#' @name nstates
+NULL
+
+#' @rdname nstates
+#' @export
+nstates <- function(x) {
+  UseMethod("nstates", x)
+}
+
+#' @rdname nstates
+#' @export
+nstates.StochVec <- function(x) {
+  length(x)
+}
+
+#' @rdname nstates
+#' @export
+nstates.StochMat <- function(x) {
+  nrow(x)
+}
+
+#' @rdname nstates
+#' @export
+nstates.MarkovChain <- function(x) {
+  nstates(x$P)
+}
+
+#' @rdname nstates
+#' @export
+nstates.default <- function(x) {
+  stop("`x` must be a `StochVec`, a `StochMat`, or a `MarkovChain` object.",
+       call. = FALSE)
+}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Stationarity                     ----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -251,34 +308,7 @@ cron <- function(i, n) {
   x
 }
 
-#' Number of States
-#'
-#' @description
-#' Returns the number of states in a Markov chain or stochastic matrix.
-#'
-#' @param x A `MarkovChain` or `StochMat` object.
-#'
-#' @return A positive integer giving the number of states.
-#'
-#' @export
-nstates <- function(x) {
-  UseMethod("nstates", x)
-}
 
-#' @export
-nstates.MarkovChain <- function(x) {
-  nrow(x$P)
-}
-
-#' @export
-nstates.StochMat <- function(x) {
-  nrow(x)
-}
-
-#' @export
-nstates.default <- function(x) {
-  stop("`x` must be a `MarkovChain` or `StochMat` object.", call. = FALSE)
-}
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Check functions                  ----

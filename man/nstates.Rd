@@ -2,16 +2,40 @@
 % Please edit documentation in R/05_tools.R
 \name{nstates}
 \alias{nstates}
+\alias{nstates.StochVec}
+\alias{nstates.StochMat}
+\alias{nstates.MarkovChain}
+\alias{nstates.default}
 \title{Number of States}
 \usage{
 nstates(x)
+
+\method{nstates}{StochVec}(x)
+
+\method{nstates}{StochMat}(x)
+
+\method{nstates}{MarkovChain}(x)
+
+\method{nstates}{default}(x)
 }
 \arguments{
-\item{x}{A \code{MarkovChain} or \code{StochMat} object.}
+\item{x}{A \code{StochVec}, a \code{StochMat}, or a \code{MarkovChain} object.}
+
+\item{...}{Additional arguments passed to methods. Currently unused.}
 }
 \value{
 A positive integer giving the number of states.
 }
 \description{
 Returns the number of states in a Markov chain or stochastic matrix.
+}
+\examples{
+P <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE))
+
+a <- StochVec(c(0.4, 0.6))
+x <- MarkovChain(a = a, P = P)
+nstates(a)
+nstates(P)
+nstates(x)
+
 }

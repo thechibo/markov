@@ -123,3 +123,33 @@ test_that("get_state_names() rejects unsupported objects", {
   expect_error(get_state_names(matrix(1, nrow = 1)), expected_message)
   expect_error(get_state_names(list()), expected_message)
 })
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# nstates()                        ----
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+test_that("nstates() returns the length of a StochVec", {
+  a <- StochVec(c(low = 0.4, high = 0.6))
+  expect_identical(nstates(a), 2L)
+})
+
+test_that("nstates() returns the number of rows in a StochMat", {
+  P <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE))
+  expect_identical(nstates(P), 2L)
+})
+
+test_that("nstates() returns the number of rows in a MarkovChain", {
+  a <- StochVec(c(0.4, 0.6))
+  P <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE))
+  x <- MarkovChain(a, P)
+  expect_identical(nstates(x), 2L)
+})
+
+test_that("nstates() rejects unsupported objects", {
+  expect_error(nstates(c(0.4, 0.6)),
+    "`x` must be a `StochVec`, a `StochMat`, or a `MarkovChain` object.")
+  expect_error(nstates(matrix(1, nrow = 1)),
+    "`x` must be a `StochVec`, a `StochMat`, or a `MarkovChain` object.")
+})
+
+
