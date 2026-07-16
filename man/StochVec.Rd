@@ -10,7 +10,7 @@
 \usage{
 new_StochVec(...)
 
-validate_StochVec(x)
+validate_StochVec(x, tol = 1e-12)
 
 StochVec(...)
 

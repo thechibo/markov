@@ -9,7 +9,6 @@ test_that("mc_estim() rejects invalid observation sequences", {
   )
 })
 
-
 test_that("mc_estim() requires exactly one valid init value", {
   expect_error(
     mc_estim(c("a", "b"), init = "invalid")
@@ -21,7 +20,6 @@ test_that("mc_estim() requires exactly one valid init value", {
     )
   )
 })
-
 
 test_that("mc_estim() estimates numeric transitions and sorts states", {
   x <- c(2, 1, 2, 2, 1)

@@ -5,6 +5,9 @@
 
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/thechibo/markov/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/thechibo/markov/actions/workflows/R-CMD-check.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/thechibo/markov/graph/badge.svg)](https://app.codecov.io/gh/thechibo/markov)
 <!-- badges: end -->
 
 ## Introduction
@@ -12,6 +15,8 @@
 The `markov` R package develops…
 
 ### Key Features
+
+The package’s key features are…
 
 ## Installation
 

@@ -10,27 +10,37 @@
 #' @keywords internal
 new_StochVec <- function(...) {
   x <- c(...)
-  if (is.StochVec(x)) {
+  if (inherits(x, "StochVec")) {
     return(x)
   }
-  x <- set_state_names(x)
   structure(x, class = c("StochVec", "numeric"))
 }
 
 #' @rdname StochVec
 #' @keywords internal
-validate_StochVec <- function(x) {
-
-  if (any(is.na(x)) || any(x < 0)) {
-    stop("All values must be non-missing and greater than zero.")
+validate_StochVec <- function(x, tol = 1e-12) {
+  if (!is.numeric(x)) {
+    stop("Input must be numeric.", call. = FALSE)
   }
 
-  if (sum(x) != 1) {
-    stop("Values must sum to 1.")
+  if (anyNA(x) || any(!is.finite(x))) {
+    stop("All values must be finite and non-missing.", call. = FALSE)
   }
 
-  x
+  if (any(x < 0)) {
+    stop("All values must be nonnegative.", call. = FALSE)
+  }
 
+  total <- sum(x)
+  if (abs(total - 1) > tol) {
+    stop("Values must sum to 1 within numerical tolerance.",
+         call. = FALSE)
+  }
+
+  # Set and check the state names
+  x <- set_state_names(x)
+
+  x / total
 }
 
 #' @title Stochastic Vector Class
@@ -70,9 +80,15 @@ StochVec <- function(...) {
 #' @rdname StochVec
 #' @export
 is.StochVec <- function(x) {
-  validate_StochVec(x)
-  is(x, "StochVec")
+  tryCatch(
+    {
+      validate_StochVec(x)
+      inherits(x, "StochVec")
+    },
+    error = function(e) { FALSE }
+  )
 }
+
 
 setOldClass("StochVec")
 
@@ -110,13 +126,10 @@ methods::setMethod("show", "StochVec", function(object) {
 
 #' @rdname StochMat
 #' @keywords internal
-new_StochMat <- function(x, tol = 1e-12, ...) {
+new_StochMat <- function(x, ...) {
   if (!is.matrix(x)) {
     x <- matrix(x, ...)
   }
-
-  x <- validate_StochMat(x, tol = tol)
-  x <- set_state_names(x)
   structure(x, class = c("StochMat", "matrix"))
 }
 
@@ -125,29 +138,32 @@ new_StochMat <- function(x, tol = 1e-12, ...) {
 validate_StochMat <- function(x, tol = 1e-12) {
 
   if (!is.matrix(x) || (nrow(x) != ncol(x))) {
-    stop("Input must be a square matrix.")
+    stop("Input must be a square matrix.", call. = FALSE)
   }
   if (!is.numeric(x)) {
-    stop("Input must be a numeric matrix.")
+    stop("Input must be a numeric matrix.", call. = FALSE)
   }
   if (anyNA(x) || any(!is.finite(x))) {
-    stop("All values must be finite and non-missing.")
+    stop("All values must be finite and non-missing.", call. = FALSE)
   }
 
   # Allow tiny negatives from floating point.
   if (any(x < - tol)) {
-    stop("All values must be >= 0 (within numerical tolerance).")
+    stop("All values must be >= 0 (within numerical tolerance).", call. = FALSE)
   }
-  if (any(x < 0)) {
-    x[x < 0] <- 0
-  }
+  x[x < 0] <- 0
 
   # Pure validation: accept if close enough, otherwise error.
   rs <- rowSums(x)
-  close <- (abs(1 - rs) <= tol)
-  if (!all(close)) {
-    stop("Row values must sum to 1 (within numerical tolerance).")
+  if (any(abs(rs - 1) > tol)) {
+    stop(
+      "Row values must sum to 1 within numerical tolerance.",
+      call. = FALSE
+    )
   }
+
+  # Set and check the state names
+  x <- set_state_names(x)
 
   x / rs
 }
@@ -192,8 +208,13 @@ StochMat <- function(...) {
 #' @rdname StochMat
 #' @export
 is.StochMat <- function(x) {
-  validate_StochMat(x)
-  is(x, "StochMat")
+  tryCatch(
+    {
+      validate_StochMat(x)
+      inherits(x, "StochMat")
+    },
+    error = function(e) { FALSE }
+  )
 }
 
 setOldClass("StochMat")
@@ -245,6 +266,10 @@ validate_MarkovChain <- function(x) {
   is.StochMat(x$P)
   if (length(x$a) != nrow(x$P)) {
     stop("The initial distribution and transition matrix must be of compatible dimensions.")
+  }
+  # Check the state names
+  if(!identical(get_state_names(x$a), get_state_names(x$P))) {
+    stop("The initial distribution and transition matrix must have identical state names.", call. = FALSE)
   }
   x
 }
@@ -311,8 +336,13 @@ MarkovChain <- function(a, P) {
 #' @rdname MarkovChain
 #' @export
 is.MarkovChain <- function(x) {
-  validate_MarkovChain(x)
-  is(x, "MarkovChain")
+  tryCatch(
+    {
+      validate_MarkovChain(x)
+      inherits(x, "MarkovChain")
+    },
+    error = function(e) { FALSE }
+  )
 }
 
 setOldClass("MarkovChain")

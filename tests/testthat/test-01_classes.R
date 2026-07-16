@@ -9,7 +9,9 @@ make_test_chain <- function(a = c("A" = 0.6, "B" = 0.4)) {
 }
 
 
-# StochVec -----------------------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# StochVec                         ----
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 test_that("StochVec() constructs a named stochastic vector", {
   observed <- StochVec(c("A" = 0.25, "B" = 0.75))
@@ -27,8 +29,8 @@ test_that("StochVec() accepts zero probabilities", {
 })
 
 test_that("StochVec() rejects missing and negative values", {
-  expect_error(StochVec(c(NA_real_, 1)), "non-missing")
-  expect_error(StochVec(c(-0.1, 1.1)), "greater than zero")
+  expect_error(StochVec(c(NA_real_, 1)), "All values must be finite and non-missing")
+  expect_error(StochVec(c(-0.1, 1.1)), "All values must be nonnegative.")
 })
 
 test_that("StochVec() rejects vectors that do not sum to one", {
@@ -51,8 +53,9 @@ test_that("print.StochVec() prints a summary and returns invisibly", {
   expect_identical(returned, x)
 })
 
-
-# StochMat -----------------------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# StochMat                         ----
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 test_that("StochMat() constructs a stochastic matrix", {
   observed <- StochMat(make_test_matrix())
@@ -113,6 +116,44 @@ test_that("StochMat() rejects rows that do not sum to one", {
   expect_error(StochMat(P), "Row values must sum to 1")
 })
 
+test_that("StochMat rejects different row and column names", {
+  expect_error(
+    StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE,
+                    dimnames = list(c("low", "high"), c("down", "up")))),
+    "Row and column names must be identical."
+  )
+})
+
+test_that("set_state_names() fills missing column names when row names are sequential", {
+  x <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE,
+                       dimnames = list(c("1", "2"), NULL)))
+  expect_identical(rownames(x), c("1", "2"))
+  expect_identical(colnames(x), c("1", "2"))
+})
+
+test_that("set_state_names() fills missing row names when column names are sequential", {
+  x <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE,
+                       dimnames = list(c("1", "2"), NULL)))
+  expect_identical(rownames(x), c("1", "2"))
+  expect_identical(colnames(x), c("1", "2"))
+})
+
+test_that("StochMat rejects named rows with missing columns when names are nonsequential", {
+  expect_error(
+    StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE,
+                    dimnames = list(c("low", "high"), NULL))),
+    "Row and column names must be identical."
+  )
+})
+
+test_that("StochMat rejects named rows with missing columns when names are nonsequential", {
+  expect_error(
+    StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE,
+                    dimnames = list(NULL, c("low", "high")))),
+    "Row and column names must be identical."
+  )
+})
+
 test_that("is.StochMat() distinguishes matrices from StochMat objects", {
   P <- make_test_matrix()
   expect_false(is.StochMat(P))
@@ -127,8 +168,9 @@ test_that("print.StochMat() prints a summary and returns invisibly", {
   expect_identical(returned, P)
 })
 
-
-# MarkovChain --------------------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# MarkovChain                      ----
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 test_that("MarkovChain() constructs its component classes", {
   observed <- make_test_chain()
@@ -139,8 +181,14 @@ test_that("MarkovChain() constructs its component classes", {
   expect_true(is.MarkovChain(observed))
 })
 
+test_that("MarkovChain() does not accept different state names", {
+  expect_error(MarkovChain(a = c("A" = 1, "B" = 0), P = diag(2)))
+})
+
 test_that("MarkovChain() accepts zero initial and transition probabilities", {
-  observed <- MarkovChain(a = c("A" = 1, "B" = 0), P = diag(2))
+  observed <- MarkovChain(a = c("A" = 1, "B" = 0),
+                          P = matrix(c(1, 0, 0, 1), nrow = 2,
+                                     dimnames = list(c("A", "B"), c("A", "B"))))
   expect_equal(as.numeric(observed$a), c(1, 0))
   expect_equal(unname(unclass(observed$P)), diag(2))
 })
@@ -170,7 +218,31 @@ test_that("print.MarkovChain() prints both components and returns invisibly", {
   expect_identical(returned, chain)
 })
 
-# MarkovChainList ----------------------------------------------------------
+test_that("MarkovChain requires exactly the elements a and P", {
+  a <- StochVec(c("A" = 0.5, "B" = 0.5))
+  P <- StochMat(make_test_matrix())
+  malformed <- structure(
+    list(a = a, P = P, b = a),
+    class = c("MarkovChain", "list")
+  )
+  expect_error(validate_MarkovChain(malformed))
+})
+
+test_that("MarkovChain requires identical state names in a and P", {
+  a <- StochVec(c("A" = 0.3, "B" = 0.7))
+  P <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE,
+                       dimnames = list(c("low", "high"), c("low", "high"))))
+  expect_error(MarkovChain(a, P),
+               "The initial distribution and transition matrix must have identical state names.")
+})
+
+test_that("MarkovChain requires compatible vector and matrix dimensions", {
+  expect_error(MarkovChain(a = c(0.5, 0.5), P = diag(3)))
+})
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# MarkovChainList                  ----
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 test_that("MarkovChainList() constructs a list of Markov chains", {
   first <- make_test_chain(c("A" = 1, "B" = 0))
@@ -204,20 +276,4 @@ test_that("MarkovChainList() accepts an empty list", {
   observed <- MarkovChainList(list())
   expect_s3_class(observed, "MarkovChainList")
   expect_length(observed, 0)
-})
-
-# These tests expose validation gaps in the current implementation.
-
-test_that("MarkovChain requires exactly the elements a and P", {
-  a <- StochVec(c("A" = 0.5, "B" = 0.5))
-  P <- StochMat(make_test_matrix())
-  malformed <- structure(
-    list(a = a, P = P, b = a),
-    class = c("MarkovChain", "list")
-  )
-  expect_error(validate_MarkovChain(malformed))
-})
-
-test_that("MarkovChain requires compatible vector and matrix dimensions", {
-  expect_error(MarkovChain(a = c(0.5, 0.5), P = diag(3)))
 })

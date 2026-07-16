@@ -6,48 +6,129 @@
 # State Names                      ----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+#' Get or Set State Names
+#'
+#' @description
+#' Utilities for assigning and retrieving the state names associated with
+#' stochastic vectors, stochastic matrices, and Markov chains.
+#'
+#' `set_state_names()` assigns default sequential state names when names are
+#' missing. Existing names are preserved.
+#'
+#' `get_state_names()` retrieves the state names attached to an object.
+#'
+#' @param x A `StochVec`, `StochMat`, or, for `get_state_names()`, a
+#'   `MarkovChain` object.
+#' @param ... Additional arguments passed to methods. Currently unused.
+#'
+#' @details
+#' For an unnamed `StochVec`, `set_state_names()` assigns the names
+#' `"1"`, `"2"`, ..., according to the vector length.
+#'
+#' For a `StochMat`, missing row or column names are assigned as
+#' `"1"`, `"2"`, ..., according to the matrix dimensions. After assignment,
+#' the row and column names must be identical. An error is raised when they
+#' differ.
+#'
+#' For a `MarkovChain`, `get_state_names()` retrieves the row names of its
+#' transition matrix.
+#'
+#' @return
+#' `set_state_names()` returns `x` with state names assigned where necessary.
+#'
+#' `get_state_names()` returns a character vector containing the state names.
+#'
+#' @examples
+#' a <- StochVec(c(0.4, 0.6))
+#' get_state_names(a)
+#'
+#' P <- StochMat(matrix(c(0.8, 0.2,
+#'                        0.3, 0.7),
+#'                      nrow = 2, byrow = TRUE))
+#' get_state_names(P)
+#'
+#' named_a <- StochVec(c(low = 0.4, high = 0.6))
+#' get_state_names(named_a)
+#'
+#' named_P <- StochMat(
+#'   matrix(c(0.8, 0.2,
+#'            0.3, 0.7),
+#'          nrow = 2, byrow = TRUE,
+#'          dimnames = list(c("low", "high"), c("low", "high")))
+#' )
+#' get_state_names(named_P)
+#'
+#' mc <- MarkovChain(a = named_a, P = named_P)
+#' get_state_names(mc)
+#'
+#' @name state_names
+NULL
+
+#' @rdname state_names
 #' @export
 set_state_names <- function(x, ...) {
-  UseMethod("set_state_names")
+  UseMethod("set_state_names", x)
 }
 
+#' @rdname state_names
 #' @export
-set_state_names.MarkovChain <- function(x, ...) {
-  x$a <- set_state_names(x$a, ...)
-  x$P <- set_state_names(x$P, ...)
-  x
-}
-
-#' @export
-set_state_names.matrix <- function(x, ...) {
-  if (is.null(rownames(x))) {
-    rownames(x) <- as.character(seq_len(nrow(x)))
-    colnames(x) <- as.character(seq_len(ncol(x)))
-  }
-  x
-}
-
-#' @export
-set_state_names.numeric <- function(x, ...) {
+set_state_names.StochVec <- function(x, ...) {
   if (is.null(names(x))) {
     names(x) <- as.character(seq_along(x))
   }
   x
 }
 
+#' @rdname state_names
+#' @export
+set_state_names.StochMat <- function(x, ...) {
+  if (is.null(rownames(x))) {
+    rownames(x) <- as.character(seq_len(nrow(x)))
+  }
+  if (is.null(colnames(x))) {
+    colnames(x) <- as.character(seq_len(ncol(x)))
+  }
+  if (!identical(rownames(x), colnames(x))) {
+    stop("Row and column names must be identical.", call. = FALSE)
+  }
+  x
+}
+
+#' @rdname state_names
+#' @export
+set_state_names.default <- function(x, ...) {
+  stop("`x` must be a `StochVec` or `StochMat` object.", call. = FALSE)
+}
+
+#' @rdname state_names
 #' @export
 get_state_names <- function(x, ...) {
   UseMethod("get_state_names")
 }
 
+#' @rdname state_names
+#' @export
+get_state_names.StochVec <- function(x, ...) {
+  names(x)
+}
+
+#' @rdname state_names
+#' @export
+get_state_names.StochMat <- function(x, ...) {
+  rownames(x)
+}
+
+#' @rdname state_names
 #' @export
 get_state_names.MarkovChain <- function(x, ...) {
   rownames(x$P)
 }
 
+#' @rdname state_names
 #' @export
-get_state_names.matrix <- function(x, ...) {
-  rownames(x)
+get_state_names.default <- function(x, ...) {
+  stop("`x` must be a `StochVec`, a `StochMat`, or a `MarkovChain` object.",
+       call. = FALSE)
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
