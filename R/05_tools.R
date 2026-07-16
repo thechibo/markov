@@ -249,18 +249,18 @@ Ppower <- function (x, ...) {
 }
 
 #' @export
-Ppower.eigen <- function(r, k) {
-  rvec <- r$vectors[, which.min(abs(r$values - 1))]
+Ppower.eigen <- function(x, k) {
+  rvec <- x$vectors[, which.min(abs(x$values - 1))]
   rvec / sum(rvec)
-  t(r$vectors %*% diag(r$values ^ k) %*% solve(r$vectors))
+  t(x$vectors %*% diag(x$values ^ k) %*% solve(x$vectors))
 }
 
 #' @export
-Ppower.matrix <- function(P, k) {
-  r <- Pdecomp(P)
-  rvec <- r$vectors[, which.min(abs(r$values - 1))]
+Ppower.matrix <- function(x, k) {
+  x <- Pdecomp(x)
+  rvec <- x$vectors[, which.min(abs(x$values - 1))]
   rvec / sum(rvec)
-  t(r$vectors %*% diag(r$values ^ k) %*% solve(r$vectors))
+  t(x$vectors %*% diag(x$values ^ k) %*% solve(x$vectors))
 }
 
 Ppowers <- function(P, k) {

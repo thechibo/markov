@@ -6,6 +6,8 @@
 \alias{markov-package}
 \title{markov: Hidden Markov Models Inference}
 \description{
+\if{html}{\figure{logo.svg}{options: style='float: right' alt='logo' width='120'}}
+
 This package performs statistical inference on HMM along with reliability indicators.
 }
 \seealso{
@@ -22,8 +24,8 @@ Useful links:
 Authors:
 \itemize{
   \item Ioannis Oikonomidis \email{goikon@math.uoa.gr} (\href{https://orcid.org/0000-0001-8130-2104}{ORCID})
-  \item Georgios Gavrilopoulos \email{your-email-here} (\href{https://orcid.org/your-orcid-id-here}{ORCID})
-  \item Irene Votsi \email{your-email-here} (\href{https://orcid.org/your-orcid-id-here}{ORCID})
+  \item Georgios Gavrilopoulos \email{your-email-here}
+  \item Irene Votsi \email{your-email-here} (\href{https://orcid.org/0000-0002-7397-2025}{ORCID})
   \item Samis Trevezas \email{strevezas@math.uoa.gr} (\href{https://orcid.org/0000-0003-2262-8299}{ORCID})
 }
 

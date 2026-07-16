@@ -49,6 +49,7 @@ lambda_block <- function(p) {
 #'
 #' @inherit MarkovChain examples
 #'
+#' @importFrom Matrix bdiag
 #' @export
 mat_gamma <- function(x, ...) {
   UseMethod("mat_gamma", x)

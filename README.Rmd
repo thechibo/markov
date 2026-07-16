@@ -16,15 +16,40 @@ knitr::opts_chunk$set(
 # markov
 
 <!-- badges: start -->
+[![R-CMD-check](https://github.com/thechibo/markov/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/thechibo/markov/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/thechibo/markov/graph/badge.svg)](https://app.codecov.io/gh/thechibo/markov)
 <!-- badges: end -->
 
-The goal of markov is to ...
+## Introduction
+
+The `markov` R package develops...
+
+### Key Features
 
 ## Installation
 
-You can install the development version of markov from [GitHub](https://github.com/) with:
+You can install the release version of `markov` from CRAN by running the following line of code:
 
-``` r
-# install.packages("devtools")
-devtools::install_github("thechibo/markov")
+```{r, eval=FALSE}
+ install.packages("markov")
 ```
+
+You can install the development version of `markov` from github by running the following line of code:
+
+```{r, eval=FALSE}
+ devtools::install_github("thechibo/markov")
+```
+
+More details can be found in the [markov Github repository](https://github.com/thechibo/markov "markov Github repository").
+
+## Documentation
+
+Detailed documentation, along with reproducible examples, can be found in the package vignette `vignette(topic = "markov", package = "markov")`.
+
+## Team
+
+The `markov` package is developed and maintained by:
+
+- [Ioannis Oikonomidis](http://users.uoa.gr/~goikon/ "Ioannis Oikonomidis Homepage") - Department of Mathematics, National and Kapodistrian University of Athens
+- [Irene Votsi](https://votsiire.jimdofree.com/ "Irene Votsi Homepage") - LIEC, CNRS, Université de Lorraine
+- [Samis Trevezas](http://scholar.uoa.gr/strevezas/ "Samis Trevezas Homepage") - Department of Mathematics, National and Kapodistrian University of Athens

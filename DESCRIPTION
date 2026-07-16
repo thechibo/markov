@@ -2,10 +2,9 @@ Package: markov
 Title: Hidden Markov Models Inference
 Version: 0.0.1
 Authors@R: c(
-    person("Georgios", "Gavrilopoulos", , "your-email-here", role = "aut",
-           comment = c(ORCID = "your-orcid-id-here")),
+    person("Georgios", "Gavrilopoulos", , "your-email-here", role = "aut"),
     person("Irene", "Votsi", , "your-email-here", role = "aut",
-           comment = c(ORCID = "your-orcid-id-here")),
+           comment = c(ORCID = "0000-0002-7397-2025")),
     person("Samis", "Trevezas", , "strevezas@math.uoa.gr", role = "aut",
            comment = c(ORCID = "0000-0003-2262-8299")),
     person("Ioannis", "Oikonomidis", , "goikon@math.uoa.gr", role = c("aut", "cre"),
@@ -23,6 +22,7 @@ Imports:
     doSNOW,
     fastmatrix,
     foreach,
+    Matrix,
     methods,
     progress,
     stats
@@ -33,8 +33,8 @@ Suggests:
     testthat (>= 3.0.0)
 VignetteBuilder: 
     knitr
+Config/roxygen2/version: 8.0.0
 Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE)
-Config/roxygen2/version: 8.0.0

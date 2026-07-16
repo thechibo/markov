@@ -8,6 +8,8 @@ mc_stat(x, ...)
 }
 \arguments{
 \item{x}{A \code{MarkovChain} or a \code{StochMat} object.}
+
+\item{...}{Additional arguments passed to methods.}
 }
 \value{
 A \code{StochVec} (unique recurrent class), or a list of \code{StochVec} objects.

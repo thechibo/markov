@@ -9,6 +9,7 @@
 #' Markov chain.
 #'
 #' @param x A `MarkovChain` or a `StochMat` object.
+#' @param ... Additional arguments passed to methods.
 #'
 #' @details
 #' For a transition matrix \eqn{P}, a stationary distribution \eqn{\pi}
@@ -45,15 +46,15 @@ mc_stat.MarkovChain <- function(x, ...) {
 }
 
 #' @export
-mc_stat.StochMat <- function(P, ...) {
+mc_stat.StochMat <- function(x, ...) {
 
   # Preliminaries
-  s <- nrow(P)
-  st_names <- get_state_names(P)
+  s <- nrow(x)
+  st_names <- get_state_names(x)
 
   # Find extremals (stationary distributions for each recurrent class)
-  closed_classes <- Filter(function(c) {is_recurrent(P, c)}, mc_classes(P))
-  extremals <- lapply(closed_classes, function(c) {stat_on_class(P, c)})
+  closed_classes <- Filter(function(c) {is_recurrent(x, c)}, mc_classes(x))
+  extremals <- lapply(closed_classes, function(c) {stat_on_class(x, c)})
 
   # Unique iff exactly one closed class
   if (length(closed_classes) == 1L) {

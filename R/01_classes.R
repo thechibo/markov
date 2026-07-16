@@ -243,6 +243,9 @@ validate_MarkovChain <- function(x) {
   }
   is.StochVec(x$a)
   is.StochMat(x$P)
+  if (length(x$a) != nrow(x$P)) {
+    stop("The initial distribution and transition matrix must be of compatible dimensions.")
+  }
   x
 }
 
