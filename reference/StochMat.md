@@ -8,7 +8,7 @@ underlying storage `"matrix"`.
 ## Usage
 
 ``` r
-new_StochMat(x, tol = 1e-12, ...)
+new_StochMat(x, ...)
 
 validate_StochMat(x, tol = 1e-12)
 

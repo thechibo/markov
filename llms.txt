@@ -6,6 +6,8 @@ The `markov` R package develops…
 
 ### Key Features
 
+The package’s key features are…
+
 ## Installation
 
 You can install the release version of `markov` from CRAN by running the
@@ -68,6 +70,8 @@ The `markov` package is developed and maintained by:
 - [`mttf()`](mttf.md) [`var_mttf()`](mttf.md) [`var_mttf_sl()`](mttf.md)
   [`deriv_psi()`](mttf.md) : Mean Time to Failure
 - [`nstates()`](nstates.md) : Number of States
+- [`set_state_names()`](state_names.md)
+  [`get_state_names()`](state_names.md) : Get or Set State Names
 - [`var_avail()`](var_avail.md) : Variance of availability
 - [`var_stat()`](var_stat.md) : Asymptotic Variance–Covariance Matrix of
   the stationary distribution MLE

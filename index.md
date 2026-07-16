@@ -6,6 +6,8 @@ The `markov` R package develops…
 
 ### Key Features
 
+The package’s key features are…
+
 ## Installation
 
 You can install the release version of `markov` from CRAN by running the
