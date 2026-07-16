@@ -1,0 +1,79 @@
+# markov
+
+## Introduction
+
+The `markov` R package develops…
+
+### Key Features
+
+## Installation
+
+You can install the release version of `markov` from CRAN by running the
+following line of code:
+
+``` r
+
+ install.packages("markov")
+```
+
+You can install the development version of `markov` from github by
+running the following line of code:
+
+``` r
+
+ devtools::install_github("thechibo/markov")
+```
+
+More details can be found in the [markov Github
+repository](https://github.com/thechibo/markov "markov Github repository").
+
+## Documentation
+
+Detailed documentation, along with reproducible examples, can be found
+in the package vignette
+[`vignette(topic = "markov", package = "markov")`](articles/markov.md).
+
+## Team
+
+The `markov` package is developed and maintained by:
+
+- [Ioannis
+  Oikonomidis](http://users.uoa.gr/~goikon/ "Ioannis Oikonomidis Homepage") -
+  Department of Mathematics, National and Kapodistrian University of
+  Athens
+- [Irene
+  Votsi](https://votsiire.jimdofree.com/ "Irene Votsi Homepage") - LIEC,
+  CNRS, Université de Lorraine
+- [Samis
+  Trevezas](http://scholar.uoa.gr/strevezas/ "Samis Trevezas Homepage") -
+  Department of Mathematics, National and Kapodistrian University of
+  Athens
+
+# Package index
+
+## All functions
+
+- [`avail()`](avail.md) : Availability of a Markov chain
+- [`estim_parallel()`](estim_parallel.md) : Parallel Estimation
+- [`is_irreducible()`](is_irreducible.md) : Test Whether a Markov Chain
+  Is Irreducible
+- [`mat_gamma()`](mat_gamma.md) : Asymptotic Variance–Covariance of the
+  Transition Probability Vector
+- [`mat_sigma()`](mat_sigma.md) : Sigma Matrix
+- [`mat_sigma_sl()`](mat_sigma_sl.md) : Title
+- [`mc_estim()`](mc_estim.md) : Estimate a Markov chain from an observed
+  state sequence
+- [`mc_sim()`](mc_sim.md) : Simulate a Markov Chain Trajectory
+- [`mc_stat()`](mc_stat.md) : Stationary Distribution of a Markov Chain
+- [`mttf()`](mttf.md) [`var_mttf()`](mttf.md) [`var_mttf_sl()`](mttf.md)
+  [`deriv_psi()`](mttf.md) : Mean Time to Failure
+- [`nstates()`](nstates.md) : Number of States
+- [`var_avail()`](var_avail.md) : Variance of availability
+- [`var_stat()`](var_stat.md) : Asymptotic Variance–Covariance Matrix of
+  the stationary distribution MLE
+
+# Articles
+
+### All vignettes
+
+- [markov](markov.md):

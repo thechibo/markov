@@ -1,0 +1,6 @@
+# markov
+
+``` r
+
+library(markov)
+```
