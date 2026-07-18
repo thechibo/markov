@@ -26,10 +26,6 @@ nstates(x)
 
   A `StochVec`, a `StochMat`, or a `MarkovChain` object.
 
-- ...:
-
-  Additional arguments passed to methods. Currently unused.
-
 ## Value
 
 A positive integer giving the number of states.

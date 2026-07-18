@@ -1,10 +1,11 @@
-# Row-wise asymptotic covariance block of transition probabilities
+# Row-Wise Asymptotic Covariance Block of Transition Probabilities
 
-Compute the \\m \times m\\ block \$\$\Gamma_i =
-\mathrm{diag}(p\_{i\bullet}) - p\_{i\bullet} p\_{i\bullet}^\top\$\$
-corresponding to a single row \\p\_{i\bullet}\\ of a Markov chain
-transition matrix \\P\\, where \\p\_{i\bullet}\\ denotes the row vector
-of transition probabilities from state \\i\\.
+Computes the \\m \times m\\ covariance block \$\$ \Lambda_i =
+\operatorname{diag}(p\_{i\bullet}) - p\_{i\bullet}p\_{i\bullet}^{\mathsf
+T}, \$\$ associated with row \\i\\ of a finite-state Markov chain
+transition matrix \\P\\. Here, \\p\_{i\bullet} = (p\_{i1}, \ldots,
+p\_{im})^{\mathsf T}\\ is the vector of transition probabilities from
+state \\i\\.
 
 ## Usage
 
@@ -21,5 +22,20 @@ lambda_block(p)
 
 ## Value
 
-A numeric matrix of dimension \\m \times m\\, where \\m =
-\mathrm{length}(p)\\.
+A numeric matrix of dimension \\s \times s\\, where \\s =
+\mathrm{length}(p)\\ is the number of states.
+
+## Details
+
+This matrix is the covariance matrix of a single multinomial trial with
+category-probability vector \\p\_{i\bullet}\\. It also forms the
+\\i\\-th diagonal block of the asymptotic covariance matrix of the
+empirical transition-probability MLE \\\widehat{\mathbf P}(n)\\.
+
+The \\(j,k)\\ entry of the matrix is \$\$ \Lambda_i(j,k) =
+p\_{ij}\left(\delta\_{jk} - p\_{ik}\right), \qquad j,k = 1,\ldots,m,
+\$\$ where \\\delta\_{jk}\\ is the Kronecker delta.
+
+## See also
+
+[`vcov_p()`](vcov_p.md)

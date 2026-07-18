@@ -1,15 +1,10 @@
-# Availability of a Markov chain
+# Availability of a Markov Chain
 
 Compute the discrete-time availability function of a system whose
 degradation/repair dynamics are modeled by a finite-state Markov chain.
 Availability at time \\t\\ is defined as \$\$ A(t) = \Pr\\ X_t \in
 \mathcal{U} \\ \$\$ where \\X_t\\ is the state of the chain at time
 \\t\\ and \\\mathcal{U}\\ is the set of *up* (operational) states.
-
-Equivalently, for each time \\t\\ in `time`, the function computes \$\$
-A(t) = a P^t \mathbf{1}\_{\mathcal{U}}, \$\$ where \\P = x\$P\\ is the
-transition matrix and \\\mathbf{1}\_{\mathcal{U}}\\ is the indicator
-vector of up states.
 
 ## Usage
 
@@ -25,18 +20,31 @@ avail(x, time, up)
 
 - time:
 
-  Integer vector. Discrete time steps \\t\\ at which to evaluate the
-  availability \\A(t)\\.
+  A positive integer vector giving the discrete time points \\t\\ at
+  which availability \\A(t)\\ is evaluated.
+
+- up:
+
+  Integer or character vector giving the up (operational) states.
 
 ## Value
 
 A numeric vector of the same length as `time`, where the \\j\\-th
 element is the probability that the system is available (in an up state)
-at time `time[j]`.
+at `time[j]`.
+
+## Details
+
+For each time \\t\\, the function computes \$\$ A(t) = a P^t
+\mathbf{1}\_{\mathcal{U}}, \$\$ where \\a\\ is the initial distribution,
+\\P\\ is the transition matrix, and \\\mathbf{1}\_{\mathcal{U}}\\ is the
+indicator vector of the operational states.
+
+Duplicate values in `up` are ignored.
 
 ## See also
 
-[`MarkovChain()`](MarkovChain.md), [`mat_gamma()`](mat_gamma.md)
+[`MarkovChain()`](MarkovChain.md), [`Ppower()`](Ppower.md)
 
 ## Examples
 
@@ -51,14 +59,14 @@ P <- matrix(c(0.3, 0.7, 0,
 x <- MarkovChain(a = a, P = P)
 
 # Find Stationary distribution
-pi_vec <- mc_stat(x)
+pi_vec <- stat(x)
 
 # Simulate a single trajectory of length m
 m <- 1e4
-traj <- mc_sim(m, x)
+traj <- sim(m, x)
 
 # Estimate the transition probability matrix
-y <- mc_estim(traj)
+y <- fit(traj)
 
 # Make a list of Markov Chains
 L <- MarkovChainList(list(x, y))

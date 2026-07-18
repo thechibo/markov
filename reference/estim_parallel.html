@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">markov</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,14 +82,14 @@
 <span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="MarkovChain.html">MarkovChain</a></span><span class="op">(</span>a <span class="op">=</span> <span class="va">a</span>, P <span class="op">=</span> <span class="va">P</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Find Stationary distribution</span></span></span>
-<span class="r-in"><span><span class="va">pi_vec</span> <span class="op">&lt;-</span> <span class="fu"><a href="mc_stat.html">mc_stat</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">pi_vec</span> <span class="op">&lt;-</span> <span class="fu"><a href="stat.html">stat</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Simulate a single trajectory of length m</span></span></span>
 <span class="r-in"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fl">1e4</span></span></span>
-<span class="r-in"><span><span class="va">traj</span> <span class="op">&lt;-</span> <span class="fu"><a href="mc_sim.html">mc_sim</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">x</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">traj</span> <span class="op">&lt;-</span> <span class="fu"><a href="sim.html">sim</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">x</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Estimate the transition probability matrix</span></span></span>
-<span class="r-in"><span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="mc_estim.html">mc_estim</a></span><span class="op">(</span><span class="va">traj</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit.html">fit</a></span><span class="op">(</span><span class="va">traj</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Make a list of Markov Chains</span></span></span>
 <span class="r-in"><span><span class="va">L</span> <span class="op">&lt;-</span> <span class="fu"><a href="MarkovChain.html">MarkovChainList</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span></span>
@@ -113,7 +113,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Georgios Gavrilopoulos, Irene Votsi, Samis Trevezas, Ioannis Oikonomidis.</p>
+  <p>Developed by Irene Votsi, Samis Trevezas, Ioannis Oikonomidis.</p>
 </div>
 
 <div class="pkgdown-footer-right">

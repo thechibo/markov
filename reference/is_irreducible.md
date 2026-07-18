@@ -1,4 +1,4 @@
-# Test Whether a Markov Chain Is Irreducible
+# Test Whether a Markov Chain is Irreducible
 
 Determines whether all states of a finite Markov chain communicate.
 

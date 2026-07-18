@@ -21,9 +21,7 @@ Authors:
 - Ioannis Oikonomidis <goikon@math.uoa.gr>
   ([ORCID](https://orcid.org/0000-0001-8130-2104))
 
-- Georgios Gavrilopoulos <your-email-here>
-
-- Irene Votsi <your-email-here>
+- Irene Votsi <Eirini.Votsi@univ-lorraine.fr>
   ([ORCID](https://orcid.org/0000-0002-7397-2025))
 
 - Samis Trevezas <strevezas@math.uoa.gr>
