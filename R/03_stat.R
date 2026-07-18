@@ -31,29 +31,29 @@
 #' @return
 #' A `StochVec` (unique recurrent class), or a list of `StochVec` objects.
 #'
-#' @seealso [MarkovChain()], [mc_sim()], [mc_estim()]
+#' @seealso [MarkovChain()], [sim()], [fit()]
 #'
 #' @inherit MarkovChain examples
 #'
 #' @export
-mc_stat <- function(x, ...) {
-  UseMethod("mc_stat", x)
+stat <- function(x, ...) {
+  UseMethod("stat", x)
 }
 
 #' @export
-mc_stat.MarkovChain <- function(x, ...) {
-  mc_stat(x$P, ...)
+stat.MarkovChain <- function(x, ...) {
+  stat(x$P, ...)
 }
 
 #' @export
-mc_stat.StochMat <- function(x, ...) {
+stat.StochMat <- function(x, ...) {
 
   # Preliminaries
   s <- nrow(x)
   st_names <- get_state_names(x)
 
   # Find extremals (stationary distributions for each recurrent class)
-  closed_classes <- Filter(function(c) {is_recurrent(x, c)}, mc_classes(x))
+  closed_classes <- Filter(function(c) {is_rec_class(x, c)}, mc_classes(x))
   extremals <- lapply(closed_classes, function(c) {stat_on_class(x, c)})
 
   # Unique iff exactly one closed class
@@ -84,7 +84,7 @@ mc_stat.StochMat <- function(x, ...) {
 #' The implementation uses the delta method in matrix form and Kronecker:
 #' \deqn{\Sigma_\pi = M\,\Gamma\,M^\top,}
 #' where \eqn{\Gamma} is the asymptotic covariance matrix of \eqn{\mathrm{vec}(\hat P)}
-#' returned by [mat_gamma()], and
+#' returned by [vcov_p()], and
 #' \deqn{M = \pi^\top \otimes (I - P^\top + \mathbf{1}\mathbf{1}^\top)^{-1}.}
 #'
 #' @return A numeric \eqn{s \times s} matrix, where \eqn{s} is the number of
@@ -93,24 +93,24 @@ mc_stat.StochMat <- function(x, ...) {
 #' @references
 #' GSI
 #'
-#' @seealso [mc_stat()], [mat_gamma()], [is_irreducible()]
+#' @seealso [stat()], [vcov_p()], [is_irreducible()]
 #'
 #' @inherit MarkovChain examples
 #'
 #' @export
-var_stat <- function(x, ...) {
-  UseMethod("var_stat", x)
+vcov_stat <- function(x, ...) {
+  UseMethod("vcov_stat", x)
 }
 
-#' @rdname var_stat
+#' @rdname vcov_stat
 #' @export
-var_stat.MarkovChain <- function(x, ...) {
-  var_stat(x$P, ...)
+vcov_stat.MarkovChain <- function(x, ...) {
+  vcov_stat(x$P, ...)
 }
 
-#' @rdname var_stat
+#' @rdname vcov_stat
 #' @export
-var_stat.StochMat <- function(x, ...) {
+vcov_stat.StochMat <- function(x, ...) {
 
   # Preliminaries
   if (!is_irreducible(x)) {
@@ -119,18 +119,18 @@ var_stat.StochMat <- function(x, ...) {
   s <- nstates(x)
   Is <- diag(s)
   A <- matrix(1, nrow = s, ncol = s)
-  pi_vec <- mc_stat(x)
+  pi_vec <- stat(x)
 
   # Delta-method transformation matrix
   M <- fastmatrix::kronecker.prod(matrix(pi_vec, nrow = 1L),
                                   solve(Is - t(x) + A))
 
-  tcrossprod(M %*% mat_gamma(x), M)
+  tcrossprod(M %*% vcov_p(x), M)
 }
 
-#' @rdname var_stat
+#' @rdname vcov_stat
 #' @export
-var_stat.default <- function(x, ...) {
+vcov_stat.default <- function(x, ...) {
   stop(
     "`x` must be a `MarkovChain` or `StochMat` object.",
     call. = FALSE

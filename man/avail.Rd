@@ -2,19 +2,21 @@
 % Please edit documentation in R/04_avail.R
 \name{avail}
 \alias{avail}
-\title{Availability of a Markov chain}
+\title{Availability of a Markov Chain}
 \usage{
 avail(x, time, up)
 }
 \arguments{
 \item{x}{An object of class \code{MarkovChain}.}
 
-\item{time}{Integer vector. Discrete time steps \eqn{t} at which to evaluate
-the availability \eqn{A(t)}.}
+\item{time}{A positive integer vector giving the discrete time points
+\eqn{t} at which availability \eqn{A(t)} is evaluated.}
+
+\item{up}{Integer or character vector giving the up (operational) states.}
 }
 \value{
 A numeric vector of the same length as \code{time}, where the \eqn{j}-th element
-is the probability that the system is available (in an up state) at time
+is the probability that the system is available (in an up state) at
 \code{time[j]}.
 }
 \description{
@@ -26,13 +28,17 @@ Availability at time \eqn{t} is defined as
 }
 where \eqn{X_t} is the state of the chain at time \eqn{t} and
 \eqn{\mathcal{U}} is the set of \emph{up} (operational) states.
-
-Equivalently, for each time \eqn{t} in \code{time}, the function computes
+}
+\details{
+For each time \eqn{t}, the function computes
 \deqn{
   A(t) = a P^t \mathbf{1}_{\mathcal{U}},
 }
-where \eqn{P = x$P} is the transition matrix and
-\eqn{\mathbf{1}_{\mathcal{U}}} is the indicator vector of up states.
+where \eqn{a} is the initial distribution, \eqn{P} is the transition
+matrix, and \eqn{\mathbf{1}_{\mathcal{U}}} is the indicator vector of the
+operational states.
+
+Duplicate values in \code{up} are ignored.
 }
 \examples{
 # Choose the transition probability matrix and the initial law of the MC
@@ -45,19 +51,19 @@ P <- matrix(c(0.3, 0.7, 0,
 x <- MarkovChain(a = a, P = P)
 
 # Find Stationary distribution
-pi_vec <- mc_stat(x)
+pi_vec <- stat(x)
 
 # Simulate a single trajectory of length m
 m <- 1e4
-traj <- mc_sim(m, x)
+traj <- sim(m, x)
 
 # Estimate the transition probability matrix
-y <- mc_estim(traj)
+y <- fit(traj)
 
 # Make a list of Markov Chains
 L <- MarkovChainList(list(x, y))
 L[[1]]
 }
 \seealso{
-\code{\link[=MarkovChain]{MarkovChain()}}, \code{\link[=mat_gamma]{mat_gamma()}}
+\code{\link[=MarkovChain]{MarkovChain()}}, \code{\link[=Ppower]{Ppower()}}
 }

@@ -1,9 +1,8 @@
 Package: markov
 Title: Hidden Markov Models Inference
-Version: 0.0.1
+Version: 0.1.0
 Authors@R: c(
-    person("Georgios", "Gavrilopoulos", , "your-email-here", role = "aut"),
-    person("Irene", "Votsi", , "your-email-here", role = "aut",
+    person("Irene", "Votsi", , "Eirini.Votsi@univ-lorraine.fr ", role = "aut",
            comment = c(ORCID = "0000-0002-7397-2025")),
     person("Samis", "Trevezas", , "strevezas@math.uoa.gr", role = "aut",
            comment = c(ORCID = "0000-0003-2262-8299")),
@@ -18,7 +17,6 @@ BugReports: https://github.com/thechibo/markov/issues
 Depends: 
     R (>= 4.0.0)
 Imports:
-    doParallel,
     doSNOW,
     fastmatrix,
     foreach,

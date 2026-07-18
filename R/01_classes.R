@@ -64,6 +64,7 @@ validate_StochVec <- function(x, tol = 1e-12) {
 #' A `numeric` vector with additional class `"StochVec"`. If validation fails,
 #' an error is thrown.
 #'
+#' @importFrom utils capture.output
 #' @examples
 #' StochVec(0.2, 0.3, 0.5)
 #' x <- StochVec(c(0.1, 0.9))
@@ -317,14 +318,14 @@ validate_MarkovChain <- function(x) {
 #' x <- MarkovChain(a = a, P = P)
 #'
 #' # Find Stationary distribution
-#' pi_vec <- mc_stat(x)
+#' pi_vec <- stat(x)
 #'
 #' # Simulate a single trajectory of length m
 #' m <- 1e4
-#' traj <- mc_sim(m, x)
+#' traj <- sim(m, x)
 #'
 #' # Estimate the transition probability matrix
-#' y <- mc_estim(traj)
+#' y <- fit(traj)
 #'
 #' # Make a list of Markov Chains
 #' L <- MarkovChainList(list(x, y))

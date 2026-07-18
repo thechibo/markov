@@ -10,7 +10,6 @@ test_that("set_state_names() assigns sequential names to an unnamed StochVec", {
   expect_identical(class(result), class(x))
 })
 
-
 test_that("set_state_names() preserves existing StochVec names", {
   x <- StochVec(c(low = 0.4, high = 0.6))
   result <- set_state_names(x)
@@ -52,20 +51,12 @@ test_that("set_state_names.StochMat ignores additional arguments", {
 })
 
 test_that("set_state_names() rejects unsupported objects", {
-  expect_error(
-    set_state_names(c(0.4, 0.6)),
-    "^`x` must be a `StochVec` or `StochMat` object\\.$"
-  )
-
-  expect_error(
-    set_state_names(matrix(1, nrow = 1)),
-    "^`x` must be a `StochVec` or `StochMat` object\\.$"
-  )
-
-  expect_error(
-    set_state_names(list()),
-    "^`x` must be a `StochVec` or `StochMat` object\\.$"
-  )
+  expect_error(set_state_names(c(0.4, 0.6)),
+    "^`x` must be a `StochVec` or `StochMat` object\\.$")
+  expect_error(set_state_names(matrix(1, nrow = 1)),
+    "^`x` must be a `StochVec` or `StochMat` object\\.$")
+  expect_error(set_state_names(list()),
+    "^`x` must be a `StochVec` or `StochMat` object\\.$")
 })
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -152,4 +143,115 @@ test_that("nstates() rejects unsupported objects", {
     "`x` must be a `StochVec`, a `StochMat`, or a `MarkovChain` object.")
 })
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Classes                          ----
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+make_closed_classes_matrix <- function() {
+  states <- c("a", "b", "c")
+  StochMat(matrix(
+    c(0.8, 0.2, 0,
+      0.3, 0.7, 0,
+      0.0, 0.0, 1),
+    nrow = 3,
+    byrow = TRUE,
+    dimnames = list(states, states)))
+}
+
+make_transient_class_matrix <- function() {
+  states <- c("a", "b", "c")
+  StochMat(matrix(
+      c(0.5, 0.4, 0.1,
+        0.4, 0.5, 0.1,
+        0.0, 0.0, 1.0),
+      nrow = 3,
+      byrow = TRUE,
+      dimnames = list(states, states)))
+}
+
+test_that("mc_classes() returns communicating classes using state names", {
+  P <- make_closed_classes_matrix()
+  expect_identical(mc_classes(P), list(c("a", "b"), "c"))
+})
+
+test_that("mc_classes() dispatches on MarkovChain objects", {
+  P <- make_closed_classes_matrix()
+  a <- StochVec(c(a = 1, b = 0, c = 0))
+  x <- MarkovChain(a = a, P = P)
+  expect_identical(mc_classes(x), mc_classes(P))
+})
+
+test_that("is_com_class() identifies communicating classes", {
+  P <- make_closed_classes_matrix()
+  expect_true(is_com_class(P, c("a", "b")))
+  expect_true(is_com_class(P, "c"))
+  expect_false(is_com_class(P, c("a", "c")))
+  expect_false(is_com_class(P, "a"))
+})
+
+test_that("is_com_class() accepts integer values for default state names", {
+  P <- StochMat(matrix(
+      c(0.5, 0.5, 0,
+        0.5, 0.5, 0,
+        0.0, 0.0, 1),
+      nrow = 3,
+      byrow = TRUE))
+  expect_true(is_com_class(P, c(1L, 2L)))
+  expect_true(is_com_class(P, 3L))
+  expect_false(is_com_class(P, c(1L, 3L)))
+})
+
+test_that("is_com_class() validates its inputs", {
+  P <- make_closed_classes_matrix()
+  expect_error(is_com_class(diag(3), "a"),
+               "`P` must be a `StochMat` object", fixed = TRUE)
+  expect_error(is_com_class(P, character()),
+               "`c` must be a non-empty vector", fixed = TRUE)
+  expect_error(is_com_class(P, NA_character_),
+    "`c` must not contain missing values|`c` contains NAs")
+  expect_error(is_com_class(P, "unknown"),
+    "All values in `c` must be valid state names", fixed = TRUE)
+})
+
+test_that("is_rec_class() distinguishes recurrent and transient classes", {
+  P <- make_transient_class_matrix()
+  expect_false(is_rec_class(P, c("a", "b")))
+  expect_true(is_rec_class(P, "c"))
+})
+
+test_that("is_rec_class() requires a complete communicating class", {
+  P <- make_transient_class_matrix()
+  expect_error(is_rec_class(P, "a"),
+               "`c` must identify a communicating class", fixed = TRUE)
+  expect_error(is_rec_class(P, c("a", "c")),
+               "`c` must identify a communicating class", fixed = TRUE)
+})
+
+test_that("stat_on_class() computes and embeds a stationary distribution", {
+  P <- make_closed_classes_matrix()
+  result <- stat_on_class(P, c("a", "b"))
+  expect_s3_class(result, "StochVec")
+  expect_identical(names(result), c("a", "b", "c"))
+  expect_equal(as.numeric(result), c(0.6, 0.4, 0), tolerance = 1e-8)
+  expect_equal(sum(result), 1, tolerance = 1e-8)
+})
+
+test_that("stat_on_class() handles an absorbing state", {
+  P <- make_closed_classes_matrix()
+  result <- stat_on_class(P, "c")
+  expect_s3_class(result, "StochVec")
+  expect_identical(names(result), c("a", "b", "c"))
+  expect_equal(as.numeric(result), c(0, 0, 1))
+})
+
+test_that("stat_on_class() rejects a transient communicating class", {
+  P <- make_transient_class_matrix()
+  expect_error(stat_on_class(P, c("a", "b")),
+               "`c` must identify a recurrent class", fixed = TRUE)
+})
+
+test_that("stationary distribution is invariant on its class", {
+  P <- make_closed_classes_matrix()
+  result <- stat_on_class(P, c("a", "b"))
+  expect_equal(as.numeric(result %*% P), as.numeric(result), tolerance = 1e-8)
+})

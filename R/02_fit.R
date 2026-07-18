@@ -15,7 +15,7 @@
 #'   \describe{
 #'     \item{`"uniform"`}{Uniform distribution over the observed state space.}
 #'     \item{`"realized"`}{Degenerate distribution concentrated on the first observed state `x[1]`. This is the default choice.}
-#'     \item{`"stationary"`}{Stationary distribution implied by the estimated transition matrix (via `mc_stat()`).}
+#'     \item{`"stationary"`}{Stationary distribution implied by the estimated transition matrix (via `stat()`).}
 #'   }
 #'
 #' @details
@@ -35,11 +35,11 @@
 #'
 #' @return A `MarkovChain` object.
 #'
-#' @seealso [MarkovChain()], [mc_sim()], [mc_stat()]
+#' @seealso [MarkovChain()], [sim()], [stat()]
 #'
 #' @inherit MarkovChain examples
 #' @export
-mc_estim <- function(x, init = c("realized", "uniform", "stationary")) {
+fit <- function(x, init = c("realized", "uniform", "stationary")) {
 
   # init must be a single choice
   init <- match.arg(init)
@@ -50,7 +50,7 @@ mc_estim <- function(x, init = c("realized", "uniform", "stationary")) {
   }
   if (anyNA(x)) {
     stop("`x` contains NA values.
-         Please remove/impute them before calling `mc_estim()`.")
+         Please remove/impute them before calling `fit()`.")
   }
 
   # States (keep stable ordering for numeric/ordered)
@@ -105,7 +105,7 @@ mc_estim <- function(x, init = c("realized", "uniform", "stationary")) {
     a <- setNames(rep(0, s), states)
     a[as.character(xf[1L])] <- 1
   } else { # init == "stationary"
-    a <- mc_stat(P)
+    a <- stat(P)
     a <- setNames(as.numeric(a), states)
   }
 

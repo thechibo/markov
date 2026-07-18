@@ -2,31 +2,77 @@
 % Please edit documentation in R/04_mttf.R
 \name{mttf}
 \alias{mttf}
-\alias{var_mttf}
-\alias{var_mttf_sl}
-\alias{deriv_psi}
 \title{Mean Time to Failure}
 \usage{
 mttf(x, up)
-
-var_mttf(x, up)
-
-var_mttf_sl(x, up)
-
-deriv_psi(x, up)
 }
 \arguments{
-\item{x}{an object of class \code{MarkovChain}.}
+\item{x}{An object of class \code{MarkovChain}.}
 
-\item{up}{integer or character. The up states.}
-
-\item{...}{extra arguments.}
+\item{up}{Integer or character vector giving the up (operational) states.}
 }
 \value{
-numeric. The Mean Time to Failure.
+A numeric scalar giving the expected number of discrete-time transitions
+before the chain first enters a state outside \code{up}.
 }
 \description{
-Mean Time to Failure
+Computes the mean time to failure of a discrete-time, finite-state Markov
+chain. Failure is defined as the first time the chain leaves the set of
+operational states specified by \code{up}.
+}
+\details{
+Let \eqn{\mathcal{U}} denote the set of operational states,
+\eqn{P_{\mathcal{U},\mathcal{U}}} be the submatrix of transition
+probabilities between operational states, \eqn{r=|\mathcal{U}|}, and
+\eqn{N=(I_r-P_{\mathcal{U},\mathcal{U}})^{-1}}. The mean time to failure is
+computed as
+\deqn{
+  \psi
+  =
+  a_{\mathcal{U}}^\mathsf{T}
+  N
+  \mathbf{1}_r,
+}
+where \eqn{a_{\mathcal{U}}} is the restriction of the initial distribution
+to the operational states and \eqn{\mathbf{1}_r} is a vector of ones.
+
+Let \eqn{\Sigma_{\mathcal{U}}} be the submatrix of \eqn{\Sigma_{\mathbf p}}
+corresponding to transitions between operational states. Then:
+\deqn{
+  \sqrt{n}
+  \left\{
+    \widehat{\psi}_n-\psi
+  \right\}
+  \mathrel{\mathop{\longrightarrow}\limits^{d}}
+  \mathcal{N}
+  \left(
+    0,
+    \sigma_\psi^2
+  \right),
+}
+where
+\deqn{
+  \sigma_\psi^2
+  =
+  D_\psi
+  \Sigma_{\mathcal{U}}
+  D_\psi^{\mathsf T},
+}
+and
+\deqn{
+  D_\psi
+  =
+  \left(
+    a_{\mathcal{U}}^{\mathsf T}N
+  \right)
+  \mathbin{\otimes}
+  \left(
+    \mathbf{1}_r^{\mathsf T}N^{\mathsf T}
+  \right).
+}
+
+The MTTF \eqn{\psi} is returned by this function.
+The asymptotic variance \eqn{\sigma_\psi^2} is returned by \code{\link[=var_mttf]{var_mttf()}}.
 }
 \examples{
 # Choose the transition probability matrix and the initial law of the MC
@@ -39,16 +85,19 @@ P <- matrix(c(0.3, 0.7, 0,
 x <- MarkovChain(a = a, P = P)
 
 # Find Stationary distribution
-pi_vec <- mc_stat(x)
+pi_vec <- stat(x)
 
 # Simulate a single trajectory of length m
 m <- 1e4
-traj <- mc_sim(m, x)
+traj <- sim(m, x)
 
 # Estimate the transition probability matrix
-y <- mc_estim(traj)
+y <- fit(traj)
 
 # Make a list of Markov Chains
 L <- MarkovChainList(list(x, y))
 L[[1]]
+}
+\seealso{
+\code{\link[=avail]{avail()}} for the time-dependent availability function.
 }

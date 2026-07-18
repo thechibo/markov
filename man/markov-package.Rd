@@ -24,8 +24,7 @@ Useful links:
 Authors:
 \itemize{
   \item Ioannis Oikonomidis \email{goikon@math.uoa.gr} (\href{https://orcid.org/0000-0001-8130-2104}{ORCID})
-  \item Georgios Gavrilopoulos \email{your-email-here}
-  \item Irene Votsi \email{your-email-here} (\href{https://orcid.org/0000-0002-7397-2025}{ORCID})
+  \item Irene Votsi \email{Eirini.Votsi@univ-lorraine.fr} (\href{https://orcid.org/0000-0002-7397-2025}{ORCID})
   \item Samis Trevezas \email{strevezas@math.uoa.gr} (\href{https://orcid.org/0000-0003-2262-8299}{ORCID})
 }
 

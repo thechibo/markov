@@ -5,7 +5,7 @@
 \alias{is_irreducible.MarkovChain}
 \alias{is_irreducible.StochMat}
 \alias{is_irreducible.default}
-\title{Test Whether a Markov Chain Is Irreducible}
+\title{Test Whether a Markov Chain is Irreducible}
 \usage{
 is_irreducible(x, ...)
 

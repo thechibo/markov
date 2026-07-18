@@ -141,7 +141,6 @@ get_state_names.default <- function(x, ...) {
 #' Returns the number of states in a Markov chain or stochastic matrix.
 #'
 #' @param x A `StochVec`, a `StochMat`, or a `MarkovChain` object.
-#' @param ... Additional arguments passed to methods. Currently unused.
 #'
 #' @return A positive integer giving the number of states.
 #'
@@ -189,28 +188,56 @@ nstates.default <- function(x) {
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Stationarity                     ----
+# Classes                          ----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# Partition states into communicating classes (equivalence classes)
+#' Communicating Classes
+#'
+#' @description
+#' Partitions the states of a Markov chain into communicating classes.
+#'
+#' @param x A `MarkovChain` or `StochMat` object.
+#' @param ... Additional arguments passed to methods.
+#'
+#' @return
+#' A list of character vectors containing the state names in each
+#' communicating class.
+#'
+#' @examples
+#' P <- StochMat(matrix(c(0.5, 0.5, 0,
+#'                        0.5, 0.5, 0,
+#'                          0,   0, 1),
+#'                      nrow = 3, byrow = TRUE))
+#' mc_classes(P)
+#'
+#' @name mc_classes
+#' @export
+NULL
+
+#' @rdname mc_classes
 #' @export
 mc_classes <- function(x, ...) UseMethod("mc_classes")
 
+#' @rdname mc_classes
 #' @export
 mc_classes.MarkovChain <- function(x, ...) {
   mc_classes(x$P, ...)
 }
 
+#' @rdname mc_classes
 #' @export
 mc_classes.StochMat <- function(x, ...) {
-  s <- nrow(x)
 
+  # Preliminaries
+  state_names <- get_state_names(x)
+  s <- nstates(x)
   adj <- (x > 0)
   diag(adj) <- TRUE
+  id <- seq_len(s)
 
   reach <- adj
   for (k in seq_len(s)) {
-    reach <- reach | outer(reach[, k], reach[k, ], "&")
+    reach <- reach | outer(reach[id, k], reach[k, id], "&")
   }
 
   comm <- reach & t(reach)
@@ -219,48 +246,166 @@ mc_classes.StochMat <- function(x, ...) {
   visited <- rep(FALSE, s)
 
   for (i in seq_len(s)) {
-    if (visited[i]) next
+    if (visited[i]) {
+      next
+    }
     idx <- which(comm[i, ])
     visited[idx] <- TRUE
-    classes[[length(classes) + 1L]] <- idx
+    classes[[length(classes) + 1L]] <- state_names[idx]
   }
 
   classes
 }
 
-# Identify recurrent classes
-is_recurrent <- function(P, c) {
-  s <- nrow(P)
-  outside <- setdiff(seq_len(s), c)
+#' Validate a Communicating Class
+#'
+#' @description
+#' Checks whether a set of state names forms a communicating class.
+#'
+#' @param P A `StochMat` object.
+#' @param c A non-empty character or integer vector containing state names.
+#'
+#' @return `TRUE` if `c` identifies a communicating class; otherwise `FALSE`.
+#'
+#' @examples
+#' P <- StochMat(matrix(c(0.5, 0.5, 0,
+#'                        0.5, 0.5, 0,
+#'                          0,   0, 1),
+#'                      nrow = 3, byrow = TRUE))
+#'
+#' is_com_class(P, c(1L, 3L))
+#' is_com_class(P, 3L)
+#'
+#' @export
+is_com_class <- function(P, c) {
+
+  # Input Validation
+  if (!inherits(P, "StochMat")) {
+    stop("`P` must be a `StochMat` object.", call. = FALSE)
+  }
+  if (length(c) == 0L) {
+    stop("`c` must be a non-empty vector.", call. = FALSE)
+  }
+  if (anyNA(c)) {
+    stop("`c` contains NAs.", call. = FALSE)
+  }
+  class_names <- as.character(c)
+  state_names <- get_state_names(P)
+  if (!all(class_names %in% state_names)) {
+    stop("All values in `c` must be valid state names.", call. = FALSE)
+  }
+
+  classes <- mc_classes(P)
+  any(vapply(classes, function(x) { setequal(x, class_names) }, logical(1)))
+}
+
+#' Identify a Recurrent Class
+#'
+#' @description
+#' Checks whether a set of states forms a recurrent class.
+#'
+#' @param P A `StochMat` object.
+#' @param c A non-empty character or integer vector containing state names.
+#'
+#' @return `TRUE` if no transitions lead outside the class; otherwise `FALSE`.
+#'
+#' @examples
+#' P <- StochMat(matrix(c(0.5, 0.5, 0,
+#'                        0.5, 0.5, 0,
+#'                          0,   0, 1),
+#'                      nrow = 3, byrow = TRUE))
+#'
+#' is_rec_class(P, c(1L, 2L))
+#' is_rec_class(P, 3L)
+#'
+#' @export
+is_rec_class <- function(P, c) {
+
+  # Input Validation
+  if (!is_com_class(P, c)) {
+    stop("`c` must identify a communicating class.", call. = FALSE)
+  }
+  class_names <- as.character(c)
+  state_names <- get_state_names(P)
+
+  outside <- setdiff(state_names, class_names)
   if (length(outside) == 0L) {
     return(TRUE)
   }
-  all(rowSums(P[c, outside, drop = FALSE]) <= 0)
+  !any(P[class_names, outside, drop = FALSE] > 0)
 }
 
-# Compute extremal stationary distribution for each closed class
+#' Stationary Distribution on a Recurrent Class
+#'
+#' @description
+#' Computes the stationary distribution associated with a recurrent
+#' communicating class and embeds it in the full state space.
+#'
+#' @param P A `StochMat` object.
+#' @param c A non-empty character or integer vector containing the state names
+#'   in a recurrent class.
+#'
+#' @return
+#' A `StochVec` containing the stationary probabilities. States outside the
+#' recurrent class have probability zero.
+#'
+#' @importFrom stats setNames
+#'
+#' @examples
+#' P <- StochMat(matrix(c(0.8, 0.2, 0,
+#'                        0.3, 0.7, 0,
+#'                          0,   0, 1),
+#'                      nrow = 3, byrow = TRUE))
+#'
+#' stat_on_class(P, c(1L, 2L))
+#' stat_on_class(P, 3L)
+#'
+#' @export
 stat_on_class <- function(P, c) {
 
-  P <- StochMat(P)
-  s <- nrow(P)
-  st_names <- get_state_names(P)
-  Pc <- P[c, c, drop = FALSE]
-  m <- length(c)
+  # Input Validation
+  if (!is_rec_class(P, c)) {
+    stop("`c` must identify a recurrent class.", call. = FALSE)
+  }
+  class_names <- as.character(c)
+  state_names <- get_state_names(P)
+
+  # Restrict the transition matrix to the class
+  Pc <- P[class_names, class_names, drop = FALSE]
+  m <- length(class_names)
 
   # Solve (pi ^ T)(I - P) = 0 with sum(pi) = 1
-  A <- rbind(t(Pc) - diag(1, m), rep(1, m))
+  A <- rbind(t(Pc) - diag(m), rep(1, m))
   b <- c(rep(0, m), 1)
 
+  # Compute the stationary distribution
   pic <- as.numeric(qr.solve(A, b, tol = 1e-7))
+  if (any(!is.finite(pic)) ||
+      any(pic < -sqrt(.Machine$double.eps)) ||
+      abs(sum(pic) - 1) > sqrt(.Machine$double.eps)) {
+    stop(
+      "Could not compute a valid stationary distribution.",
+      call. = FALSE
+    )
+  }
+
+  pic <- pic / sum(pic)
 
   # Embed in full state space
-  pi_full <- setNames(rep(0, s), st_names)
-  pi_full[st_names[c]] <- pic / sum(pic)
+  pi_full <- setNames(
+    numeric(length(state_names)),
+    state_names
+  )
+  pi_full[class_names] <- pic
   StochVec(pi_full)
 
 }
 
-#' Test Whether a Markov Chain Is Irreducible
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Irreducibility                   ----
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#' Test Whether a Markov Chain is Irreducible
 #'
 #' @description
 #' Determines whether all states of a finite Markov chain communicate.
@@ -297,83 +442,137 @@ is_irreducible.default <- function(x, ...) {
   )
 }
 
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Kronecker                        ----
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-cron <- function(i, n) {
-  x <- rep(0, n)
-  x[i] <- 1
-  x
-}
-
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Check functions                  ----
+# Matrix Powers                    ----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-is_positive_integer <- function(m) {
-  valid <- length(m) == 1L &&
-    is.numeric(m) &&
-    !is.na(m) &&
-    is.finite(m) &&
-    m > 0 &&
-    m == floor(m) &&
-    m <= .Machine$integer.max
-
-  if (!valid) {
-    stop(sprintf("`%s` must be a positive integer.",
-                 deparse(substitute(m))), call. = FALSE)
-  }
-
-  as.integer(m)
-}
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Matrix Calculus                  ----
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# Matrix kronecker product
-#' @export
-kp <- function(x, y = x) {
-  fastmatrix::kronecker.prod(x, y)
-}
-
-# Matrix cross product
-#' @export
-cp <- function(A, B) {
-  tcrossprod(M %*% mat_gamma(x), M)
-}
-
-
+#' Eigendecomposition of a Transition Matrix
+#'
+#' @description
+#' Computes the eigendecomposition of the transpose of a transition matrix.
+#'
+#' @param P A square numeric transition matrix.
+#'
+#' @return
+#' An object of class `"eigen"` containing the eigenvalues and eigenvectors
+#' of `t(P)`.
+#'
+#' @details
+#' The transpose is decomposed so that the resulting eigenvectors can be used
+#' to reconstruct powers of the original transition matrix with [Ppower()].
+#'
+#' No validation is performed to confirm that `P` is stochastic or square.
+#' Invalid inputs are handled by [base::eigen()].
+#'
+#' @examples
+#' P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
+#' decomposition <- Pdecomp(P)
+#' decomposition$values
+#'
+#' @seealso [base::eigen()], [markov::Ppower()]
+#'
 #' @export
 Pdecomp <- function(P) {
   eigen(t(P))
 }
 
+#' Power of a Transition Matrix
+#'
+#' @description
+#' Raises a transition matrix to a specified power using its eigendecomposition.
+#'
+#' @param x A numeric matrix or an `"eigen"` object.
+#' @param ... Additional arguments passed to methods.
+#' @param k A numeric scalar giving the exponent. For Markov-chain transition
+#'   matrices, this is normally a non-negative integer.
+#'
+#' @return
+#' A numeric or complex matrix representing the transition matrix raised to
+#' the power `k`.
+#'
+#' @details
+#' For a matrix input, `Ppower()` first computes the eigendecomposition of
+#' `t(x)` using [Pdecomp()]. If
+#'
+#' \deqn{P^\mathsf{T} = V D V^{-1},}
+#'
+#' then the result is calculated as
+#'
+#' \deqn{P^k = \left(V D^k V^{-1}\right)^\mathsf{T}.}
+#'
+#' This method requires the eigenvector matrix to be invertible. An error is
+#' raised by [base::solve()] when the matrix cannot be inverted. Complex
+#' results may be returned when the eigendecomposition contains complex
+#' eigenvalues or eigenvectors.
+#'
+#' @examples
+#' P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
+#'
+#' Ppower(P, k = 0)
+#' Ppower(P, k = 2)
+#'
+#' Peigen <- Pdecomp(P)
+#' Ppower(Peigen, k = 2)
+#'
+#' @seealso [Pdecomp()], [Ppowers()]
+#'
+#' @name Ppower
+NULL
+
+#' @rdname Ppower
 #' @export
-Ppower <- function (x, ...) {
+Ppower <- function (x, k, ...) {
   UseMethod("Ppower", x)
 }
 
+#' @rdname Ppower
 #' @export
-Ppower.eigen <- function(x, k) {
-  rvec <- x$vectors[, which.min(abs(x$values - 1))]
-  rvec / sum(rvec)
+Ppower.eigen <- function(x, k, ...) {
   t(x$vectors %*% diag(x$values ^ k) %*% solve(x$vectors))
 }
 
+#' @rdname Ppower
 #' @export
-Ppower.matrix <- function(x, k) {
-  x <- Pdecomp(x)
-  rvec <- x$vectors[, which.min(abs(x$values - 1))]
-  rvec / sum(rvec)
-  t(x$vectors %*% diag(x$values ^ k) %*% solve(x$vectors))
+Ppower.matrix <- function(x, k, ...) {
+  Ppower(Pdecomp(x), k = k, ...)
 }
 
+#' Successive Powers of a Transition Matrix
+#'
+#' @description
+#' Computes successive powers of a transition matrix by repeated matrix
+#' multiplication.
+#'
+#' @param P A square numeric transition matrix.
+#' @param k A positive integer giving the highest matrix power to compute.
+#'
+#' @return
+#' A list of `k + 1` matrices. Element `j + 1` contains \eqn{P^j}, beginning
+#' with the identity matrix \eqn{P^0}.
+#'
+#' @details
+#' Unlike [Ppower()], this function does not use an eigendecomposition.
+#' Instead, each power is obtained by multiplying the preceding power by `P`:
+#'
+#' \deqn{P^j = P^{j-1}P.}
+#'
+#' Repeated multiplication can be useful when all powers from \eqn{P^0}
+#' through \eqn{P^k} are required.
+#'
+#' The current implementation expects `k` to be at least one.
+#'
+#' @examples
+#' P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
+#'
+#' powers <- Ppowers(P, k = 3)
+#'
+#' powers[[1]] # P^0
+#' powers[[2]] # P^1
+#' powers[[4]] # P^3
+#'
+#' @seealso [Ppower()]
+#'
+#' @export
 Ppowers <- function(P, k) {
   Pj <- vector("list", k)
   s <- nrow(P)
@@ -382,6 +581,164 @@ Ppowers <- function(P, k) {
     Pj[[j]] <- Pj[[j - 1L]] %*% P   # P ^ (j - 1)
   }
   Pj
+}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Other Helpers                    ----
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#' Matrix Kronecker Product
+#'
+#' @description
+#' Computes the Kronecker product of two matrices.
+#'
+#' @param x A numeric matrix.
+#' @param y A numeric matrix. By default, the Kronecker product of `x` with
+#'   itself is computed.
+#'
+#' @return
+#' A numeric matrix with
+#' `nrow(x) * nrow(y)` rows and `ncol(x) * ncol(y)` columns.
+#'
+#' @details
+#' The Kronecker product replaces each element of `x` with that element
+#' multiplied by the complete matrix `y`.
+#'
+#' The function is a wrapper for [fastmatrix::kronecker.prod()].
+#'
+#' @examples
+#' A <- matrix(c(1, 2, 3, 4), nrow = 2)
+#' B <- matrix(c(0, 1, 1, 0), nrow = 2)
+#'
+#' kp(A, B)
+#' kp(A)
+#'
+#' @seealso [fastmatrix::kronecker.prod()]
+#'
+#' @export
+kp <- function(x, y = x) {
+  fastmatrix::kronecker.prod(x, y)
+}
+
+#' Matrix Transformed Cross-Product
+#'
+#' @description
+#' Computes the matrix product \eqn{C C^\mathsf{T}}, where
+#' \eqn{C = A \, \mathrm{mat\_gamma}(B)}.
+#'
+#' @param A A numeric matrix used as the left transformation matrix.
+#' @param B An object accepted by `vcov_p()`.
+#'
+#' @return
+#' A symmetric numeric matrix with `nrow(A)` rows and columns.
+#'
+#' @details
+#' This function is equivalent to `tcrossprod(A %*% vcov_p(B), A)`
+#' provided that the matrix dimensions are conformable.
+#'
+#' More precisely, because the second argument to [base::tcrossprod()] is
+#' supplied, the returned value is
+#' \eqn{(A \, \mathrm{vcov_p}(B)) A^\mathsf{T}}.
+#'
+#' @examples
+#' \dontrun{
+#' A <- diag(2)
+#' B <- c(0.5, 0.5)
+#' cp(A, B)
+#' }
+#'
+#' @seealso [base::tcrossprod()]
+cp <- function(A, B) {
+  tcrossprod(A %*% vcov_p(B), A)
+}
+
+#' Kronecker Delta Vector
+#'
+#' @description
+#' Creates a vector of length `n` with a one at position `i` and zeros
+#' elsewhere.
+#'
+#' @param i Position of the nonzero element.
+#' @param n Length of the vector.
+#'
+#' @return A numeric vector of length `n`.
+#'
+#' @examples
+#' cron(2, 4)
+#'
+#' @export
+cron <- function(i, n) {
+  x <- rep(0, n)
+  x[i] <- 1
+  x
+}
+
+#' Validate or Coerce Positive Integer Values
+#'
+#' @description
+#' Utilities for validating and coercing positive integer-valued numeric
+#' vectors.
+#'
+#' `is_positive_integer()` tests whether every element of `m` is finite,
+#' integer-valued, greater than or equal to one, and representable as a
+#' base R integer.
+#'
+#' `as_positive_integer()` performs the same validation and converts `m` to
+#' an integer vector. It raises an error when validation fails.
+#'
+#' @param m An object to validate or coerce.
+#'
+#' @details
+#' A value is considered a positive integer when it:
+#'
+#' - is numeric;
+#' - has positive length;
+#' - contains no missing or infinite values;
+#' - contains only whole numbers;
+#' - is greater than or equal to one; and
+#' - does not exceed `.Machine$integer.max`.
+#'
+#' Zero, negative numbers, fractional values, `NA`, `NaN`, `Inf`, and
+#' non-numeric objects are rejected.
+#'
+#' @return
+#' `is_positive_integer()` returns a single logical value.
+#'
+#' `as_positive_integer()` returns `m` as an integer vector, or raises an
+#' error if `m` is not a valid positive integer vector.
+#'
+#' @examples
+#' is_positive_integer(3)
+#' is_positive_integer(c(1, 2, 3))
+#' is_positive_integer(c(1, 2.5))
+#' is_positive_integer(0)
+#'
+#' as_positive_integer(3)
+#' as_positive_integer(c(1, 2, 3))
+#'
+#' @rdname positive_integer
+#' @export
+is_positive_integer <- function(m) {
+  !(any(!is.numeric(m)) ||
+    any(!is.finite(m)) ||
+    any(m < 1) ||
+    any(m %% 1 != 0) ||
+    any(m > .Machine$integer.max))
+}
+
+#' @rdname positive_integer
+#' @export
+as_positive_integer <- function(m) {
+  if (!is_positive_integer(m)) {
+    stop(
+      sprintf(
+        "`%s` must be a positive integer vector.",
+        deparse1(substitute(m))
+      ),
+      call. = FALSE
+    )
+  }
+  as.integer(m)
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

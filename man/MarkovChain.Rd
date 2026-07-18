@@ -85,14 +85,14 @@ P <- matrix(c(0.3, 0.7, 0,
 x <- MarkovChain(a = a, P = P)
 
 # Find Stationary distribution
-pi_vec <- mc_stat(x)
+pi_vec <- stat(x)
 
 # Simulate a single trajectory of length m
 m <- 1e4
-traj <- mc_sim(m, x)
+traj <- sim(m, x)
 
 # Estimate the transition probability matrix
-y <- mc_estim(traj)
+y <- fit(traj)
 
 # Make a list of Markov Chains
 L <- MarkovChainList(list(x, y))

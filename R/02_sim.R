@@ -18,15 +18,15 @@
 #' A factor of length `m` giving the visited states in order. Levels correspond
 #' to the state labels (from `names(x$a)` or `rownames(x$P)` if available).
 #'
-#' @seealso [MarkovChain()], [mc_estim()], [mc_stat()]
+#' @seealso [MarkovChain()], [fit()], [stat()]
 #'
 #' @export
 #'
 #' @inherit MarkovChain examples
-mc_sim <- function(m, x) {
+sim <- function(m, x) {
 
   # Preliminaries
-  m <- is_positive_integer(m)
+  m <- as_positive_integer(m)
   x <- validate_MarkovChain(x)
   st_names <- get_state_names(x)
   idx <- integer(m)

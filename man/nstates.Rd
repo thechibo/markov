@@ -20,8 +20,6 @@ nstates(x)
 }
 \arguments{
 \item{x}{A \code{StochVec}, a \code{StochMat}, or a \code{MarkovChain} object.}
-
-\item{...}{Additional arguments passed to methods. Currently unused.}
 }
 \value{
 A positive integer giving the number of states.
