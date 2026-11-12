@@ -6,15 +6,16 @@ observed sequence of states.
 ## Usage
 
 ``` r
-fit(x, init = c("realized", "uniform", "stationary"))
+fit(x, init = "realized")
 ```
 
 ## Arguments
 
 - x:
 
-  A vector of observed states in time order. Can be numeric, character,
-  factor, or ordered. Must have length at least 2 and contain no `NA`s.
+  An atomic vector or factor of observed states in time order. Must have
+  no dimensions, have length at least 2, and contain no `NA`s. State
+  labels must be non-empty.
 
 - init:
 
@@ -43,6 +44,8 @@ A `MarkovChain` object.
 
 The state space is defined as `unique(x)`. If `x` is numeric or ordered,
 the states are sorted; otherwise, the first-appearance order is used.
+Numeric state labels use additional precision when needed to distinguish
+values with identical default character representations.
 
 The function computes the empirical transition frequencies and
 normalizes by row to obtain a transition probability matrix.
@@ -52,8 +55,8 @@ times `t = 1, ..., n-1`), the corresponding transition row has no
 empirical counts. In that case the function treats that state as
 absorbing (probability 1 on the diagonal) and emits a warning.
 
-A numerical cleanup step will rescale rows if their sums deviate from 1
-by by more than 1e-12 (tolerance), emitting a warning.
+The row-normalized transition matrix is validated by
+[`StochMat()`](StochMat.md).
 
 ## See also
 

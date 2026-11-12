@@ -1,9 +1,7 @@
 # Stochastic Matrix Class
 
-Construct and validate a stochastic matrix: a square numeric matrix
-whose entries are strictly non-missing, strictly positive, and each row
-sums to exactly 1. The returned object has S3 class `"StochMat"` and
-underlying storage `"matrix"`.
+Construct and validate a square matrix of finite, nonnegative transition
+probabilities. The returned object has S3 class `"StochMat"`.
 
 ## Usage
 
@@ -24,17 +22,42 @@ print(x, digits = getOption("digits"), ...)
 
 - x:
 
-  For `new_StochMat()`, a matrix or something coercible to one.
+  For `new_StochMat()`, a matrix or data for
+  [`base::matrix()`](https://rdrr.io/r/base/matrix.html). For
+  `is.StochMat()`, the object to check. For validation or printing, a
+  `StochMat`.
 
 - ...:
 
-  Objects coercible to a matrix. Passed to
-  [`matrix()`](https://rdrr.io/r/base/matrix.html) when needed.
+  For the constructors, data and arguments for
+  [`base::matrix()`](https://rdrr.io/r/base/matrix.html) when the input
+  is supplied as data rather than as a matrix. For the print method,
+  additional arguments passed to
+  [`base::print()`](https://rdrr.io/r/base/print.html).
+
+- tol:
+
+  Nonnegative numeric tolerance for the absolute difference between each
+  row sum and one after clipping. The validator defaults to `1e-12`.
+
+- digits:
+
+  Number of significant digits used to round displayed values. Defaults
+  to `getOption("digits")`.
 
 ## Value
 
-A matrix with additional class `"StochMat"`. If validation fails, an
-error is thrown.
+The constructors and validator return a matrix of class `"StochMat"`.
+`is.StochMat()` returns a single logical value. The print method
+invisibly returns the validated matrix.
+
+## Details
+
+Input entries below `-1e-16` are rejected. Entries in `[-1e-16, 0)` are
+set to zero. After clipping, each row sum must differ from one by at
+most `1e-12`. A larger deviation is an error. Each accepted row is
+divided by its sum. `StochMat()` warns only if it clips negative
+entries.
 
 ## Validation
 
@@ -42,11 +65,16 @@ A valid `StochMat` must satisfy all of:
 
 - is a square matrix (`nrow(x) == ncol(x)`)
 
-- no `NA`s
+- has at least one state
 
-- all entries are `> 0`
+- all entries are finite and nonnegative
 
-- `rowSums(x) == 1` for every row
+- every row sum is within `1e-12` of one
+
+- state names are unique, non-missing, and non-empty
+
+Assign the returned object to retain corrections. `is.StochMat()` only
+checks validity.
 
 ## See also
 

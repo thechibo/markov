@@ -13,16 +13,17 @@ Ppowers(P, k)
 
 - P:
 
-  A square numeric transition matrix.
+  A nonempty square numeric matrix with finite entries.
 
 - k:
 
-  A positive integer giving the highest matrix power to compute.
+  A single positive integer giving the highest matrix power to compute.
 
 ## Value
 
 A list of `k + 1` matrices. Element `j + 1` contains \\P^j\\, beginning
-with the identity matrix \\P^0\\.
+with the identity matrix \\P^0\\. The matrices preserve the row and
+column names of `P`.
 
 ## Details
 

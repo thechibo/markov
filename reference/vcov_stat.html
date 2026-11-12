@@ -80,15 +80,19 @@ chain with stationary distribution \(\pi\). If \(\hat P\) is the MLE of
 \(P\) based on a long trajectory, then the induced estimator
 \(\hat\pi = \pi(\hat P)\) satisfies
 $$\sqrt{n}(\hat\pi - \pi) \xrightarrow{d} \mathcal{N}(0, \Sigma_\pi).$$</p>
-<p>The implementation uses the delta method in matrix form and Kronecker:
+<p>The implementation applies the matrix delta method using a Kronecker product:
 $$\Sigma_\pi = M\,\Gamma\,M^\top,$$
-where \(\Gamma\) is the asymptotic covariance matrix of \(\mathrm{vec}(\hat P)\)
-returned by <code><a href="vcov_p.html">vcov_p()</a></code>, and
-$$M = \pi^\top \otimes (I - P^\top + \mathbf{1}\mathbf{1}^\top)^{-1}.$$</p>
+where \(\Gamma\) is the asymptotic covariance matrix for the row-wise
+vectorized transition estimator \(\mathrm{vec}(\hat P^\top)\) returned by
+<code><a href="vcov_p.html">vcov_p()</a></code>. With \(\pi\) written as a row vector,
+$$M = \pi \otimes (I - P^\top + \mathbf{1}\mathbf{1}^\top)^{-1}.$$</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>GSI</p>
+    <p>Gavrilopoulos, G., Trevezas, S., and Votsi, I. (2026).
+<em>Matrix asymptotic calculus for plug-in maximum likelihood estimators in finite Markov chains</em>.
+arXiv preprint arXiv:2607.17161. <a href="https://arxiv.org/abs/2607.17161" class="external-link">https://arxiv.org/abs/2607.17161</a>.
+See Proposition 7 for the stationary differential and covariance.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -97,40 +101,11 @@ $$M = \pi^\top \otimes (I - P^\top + \mathbf{1}\mathbf{1}^\top)^{-1}.$$</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Choose the transition probability matrix and the initial law of the MC</span></span></span>
-<span class="r-in"><span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="fl">0</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">P</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">0.7</span>, <span class="fl">0</span>,</span></span>
-<span class="r-in"><span>              <span class="fl">0.6</span>, <span class="fl">0.1</span>, <span class="fl">0.3</span>,</span></span>
-<span class="r-in"><span>              <span class="fl">0.5</span>, <span class="fl">0</span>,   <span class="fl">0.5</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">3</span>, ncol <span class="op">=</span> <span class="fl">3</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">P</span> <span class="op">&lt;-</span> <span class="fu"><a href="StochMat.html">StochMat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.8</span>, <span class="fl">0.2</span>, <span class="fl">0.3</span>, <span class="fl">0.7</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">2</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">Sigma</span> <span class="op">&lt;-</span> <span class="fu">vcov_stat</span><span class="op">(</span><span class="va">P</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">Sigma</span><span class="op">)</span> <span class="co"># One stationary probability per state</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2 2</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Create a Markov Chain</span></span></span>
-<span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="MarkovChain.html">MarkovChain</a></span><span class="op">(</span>a <span class="op">=</span> <span class="va">a</span>, P <span class="op">=</span> <span class="va">P</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Find Stationary distribution</span></span></span>
-<span class="r-in"><span><span class="va">pi_vec</span> <span class="op">&lt;-</span> <span class="fu"><a href="stat.html">stat</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Simulate a single trajectory of length m</span></span></span>
-<span class="r-in"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fl">1e4</span></span></span>
-<span class="r-in"><span><span class="va">traj</span> <span class="op">&lt;-</span> <span class="fu"><a href="sim.html">sim</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">x</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Estimate the transition probability matrix</span></span></span>
-<span class="r-in"><span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit.html">fit</a></span><span class="op">(</span><span class="va">traj</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Make a list of Markov Chains</span></span></span>
-<span class="r-in"><span><span class="va">L</span> <span class="op">&lt;-</span> <span class="fu"><a href="MarkovChain.html">MarkovChainList</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">L</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Markov Chain</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Number of states: 3 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Initial distribution (a):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       1   2   3 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     0.5 0.5 0.0 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Transition matrix (P):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         1   2   3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     1 0.3 0.7 0.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     2 0.6 0.1 0.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     3 0.5 0.0 0.5</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

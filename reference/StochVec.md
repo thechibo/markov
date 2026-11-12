@@ -1,9 +1,7 @@
 # Stochastic Vector Class
 
-Construct and validate a stochastic vector: a numeric vector whose
-components are strictly non-missing, strictly positive, and sum to
-exactly 1. The returned object has S3 class `"StochVec"` and underlying
-storage `"numeric"`.
+Construct and validate a stochastic vector of finite, nonnegative
+probabilities. The returned object has S3 class `"StochVec"`.
 
 ## Usage
 
@@ -24,22 +22,46 @@ print(x, digits = getOption("digits"), ...)
 
 - ...:
 
-  Numeric values coerceable to a flat numeric vector.
+  For the constructors, numeric values combined into a flat vector. For
+  the print method, additional arguments passed to
+  [`base::print()`](https://rdrr.io/r/base/print.html).
+
+- x:
+
+  An object to check with `is.StochVec()`, or a `StochVec` to validate
+  or print.
+
+- tol:
+
+  Nonnegative numeric tolerance for the absolute difference between the
+  sum and one. The validator defaults to `1e-12`.
+
+- digits:
+
+  Number of significant digits used to round displayed values. Defaults
+  to `getOption("digits")`.
 
 ## Value
 
-A `numeric` vector with additional class `"StochVec"`. If validation
-fails, an error is thrown.
+The constructors and validator return a numeric vector of class
+`"StochVec"`. `is.StochVec()` returns a single logical value. The print
+method invisibly returns the validated vector.
+
+## Details
+
+If the sum differs from one by at most `1e-12`, `StochVec()` divides
+every entry by that sum without a warning. A larger deviation is an
+error.
 
 ## Validation
 
 A valid `StochVec` must satisfy all of:
 
-- no `NA`s
+- all entries are finite and nonnegative
 
-- all entries are `> 0`
+- the sum is within `1e-12` of one
 
-- `sum(x) == 1`
+- state names are unique, non-missing, and non-empty
 
 ## See also
 

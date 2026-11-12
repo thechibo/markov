@@ -35,7 +35,7 @@ vcov_pk(x, k, ...)
 
 - ...:
 
-  Additional arguments passed to [`vcov_p()`](vcov_p.md).
+  Additional arguments passed to methods. Currently unused.
 
 ## Value
 
@@ -50,14 +50,13 @@ transition matrix \\P\\. Then, for a fixed positive integer \\k\\, \$\$
 \mathrel{\mathop{\longrightarrow}\limits^{d}} W\_{P^k}, \$\$
 
 For which, \$\$ W\_{\mathbf p^{(k)}} =
-\mathrm{vec}\left(W\_{P^k}^{\mathMk T}\right) \sim \mathcal N\_{s^2}
-\left( \mathbf 0\_{s^2}, \Sigma\_{\mathbf p^{(k)}} \right). \$\$ This
-function calculates the asymptotic variance covariance matrix \$\$
-\Sigma\_{\mathbf p^{(k)}} = M_k \Sigma\_{\mathbf p} M_k^{\mathMk T},
-\$\$
+\mathrm{vec}\left(W\_{P^k}^{\top}\right) \sim \mathcal N\_{s^2} \left(
+\mathbf 0\_{s^2}, \Sigma\_{\mathbf p^{(k)}} \right). \$\$ This function
+calculates the asymptotic variance covariance matrix \$\$
+\Sigma\_{\mathbf p^{(k)}} = M_k \Sigma\_{\mathbf p} M_k^{\top}, \$\$
 
 where \$\$ M_k = \sum\_{i=0}^{k-1} P^i \mathbin{\otimes}
-\left(P^{k-1-i}\right)^{\mathMk T}, \$\$ and \\\otimes\\ denotes the
+\left(P^{k-1-i}\right)^{\top}, \$\$ and \\\otimes\\ denotes the
 Kronecker product.
 
 The one-step covariance matrix \\\Sigma\_{\mathbf p}\\ is computed by
@@ -65,12 +64,19 @@ The one-step covariance matrix \\\Sigma\_{\mathbf p}\\ is computed by
 
 ## References
 
-GSI
+Gavrilopoulos, G., Trevezas, S., and Votsi, I. (2026). *Matrix
+asymptotic calculus for plug-in maximum likelihood estimators in finite
+Markov chains*. arXiv preprint arXiv:2607.17161.
+<https://arxiv.org/abs/2607.17161>. See Proposition 4 for the matrix
+differential and its Kronecker representation.
 
-A. Sadek and N. Limnios (2002). *Asymptotic properties of estimators for
-nonhomogeneous Markov chains*. Statistics & Probability Letters, 60(4),
-1839–1850. See Theorem 4 (p. 1847) for the asymptotic covariance matrix
-of the k-step transition probabilities.
+Sadek, A., and Limnios, N. (2002). *Asymptotic properties for maximum
+likelihood estimators for reliability and failure rates of Markov
+chains*. Communications in Statistics - Theory and Methods, 31(10),
+1837–1861.
+[doi:10.1081/STA-120014916](https://doi.org/10.1081/STA-120014916) . See
+Theorem 4 (p. 1847) for the asymptotic covariance matrix of the k-step
+transition probabilities.
 
 ## See also
 
@@ -79,38 +85,9 @@ of the k-step transition probabilities.
 ## Examples
 
 ``` r
-# Choose the transition probability matrix and the initial law of the MC
-a <- c(0.5, 0.5, 0)
-P <- matrix(c(0.3, 0.7, 0,
-              0.6, 0.1, 0.3,
-              0.5, 0,   0.5), nrow = 3, ncol = 3, byrow = TRUE)
-
-# Create a Markov Chain
-x <- MarkovChain(a = a, P = P)
-
-# Find Stationary distribution
-pi_vec <- stat(x)
-
-# Simulate a single trajectory of length m
-m <- 1e4
-traj <- sim(m, x)
-
-# Estimate the transition probability matrix
-y <- fit(traj)
-
-# Make a list of Markov Chains
-L <- MarkovChainList(list(x, y))
-L[[1]]
-#> Markov Chain
-#>   Number of states: 3 
-#> 
-#>   Initial distribution (a):
-#>       1   2   3 
-#>     0.5 0.5 0.0 
-#> 
-#>   Transition matrix (P):
-#>         1   2   3
-#>     1 0.3 0.7 0.0
-#>     2 0.6 0.1 0.3
-#>     3 0.5 0.0 0.5
+P <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE))
+dim(vcov_pk(P, k = 2L))
+#> [1] 4 4
+identical(vcov_pk(P, k = 1L), vcov_p(P))
+#> [1] TRUE
 ```

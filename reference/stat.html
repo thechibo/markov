@@ -49,11 +49,11 @@ Markov chain.</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <code>MarkovChain</code> or a <code>StochMat</code> object.</p></dd>
+<dd><p>A valid <code>MarkovChain</code> or <code>StochMat</code> object.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments passed to methods.</p></dd>
+<dd><p>Additional arguments passed to methods. Currently unused.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -63,16 +63,28 @@ Markov chain.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>For a transition matrix \(P\), a stationary distribution \(\pi\)
-satisfies $$\pi^\top P = \pi^\top,\qquad \sum_i \pi_i = 1,\ \pi_i \ge 0.$$</p>
+satisfies $$\pi^\top P = \pi^\top,\qquad \sum_i \pi_i = 1,\ \pi_i \ge 0.$$
+For a <code>MarkovChain</code>, both components are validated and the stationary
+distribution depends only on the transition matrix.</p>
 <p>If the chain has a single closed communicating class, the stationary
 distribution is unique (though the chain may be periodic). If there are
 multiple closed communicating classes, stationary distributions are not
 unique. Every stationary distribution is a convex combination of the extremal
 ones, each supported on one closed class.</p>
+<p>The Grassmann, Taksar and Heyman (1985) algorithm, also known as GTH,
+computes the stationary probabilities within each closed class using
+off-diagonal transitions.</p>
 <p>This function returns:</p><ul><li><p>a single <code>StochVec</code> if the stationary distribution is unique;</p></li>
 <li><p>otherwise a list of <code>StochVec</code> objects, containing extremal
 stationary distributions of the corresponding recurrent classes.</p></li>
 </ul></div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Grassmann, W. K., Taksar, M. I., and Heyman, D. P. (1985).
+Regenerative Analysis and Steady State Distributions for Markov Chains.
+<em>Operations Research</em>, 33(5), 1107–1116.
+<a href="https://doi.org/10.1287/opre.33.5.1107" class="external-link">doi:10.1287/opre.33.5.1107</a></p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="MarkovChain.html">MarkovChain()</a></code>, <code><a href="sim.html">sim()</a></code>, <code><a href="fit.html">fit()</a></code></p></div>

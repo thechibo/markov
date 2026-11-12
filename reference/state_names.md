@@ -66,6 +66,8 @@ For a `StochMat`, missing row or column names are assigned as `"1"`,
 row and column names must be identical. An error is raised when they
 differ.
 
+State names must be unique, non-missing, and non-empty.
+
 For a `MarkovChain`, `get_state_names()` retrieves the row names of its
 transition matrix.
 

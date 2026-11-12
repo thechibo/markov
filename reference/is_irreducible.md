@@ -21,11 +21,11 @@ is_irreducible(x, ...)
 
 - x:
 
-  A `MarkovChain` or `StochMat` object.
+  A valid `MarkovChain` or `StochMat` object.
 
 - ...:
 
-  Additional arguments passed to methods.
+  Additional arguments passed to methods. Currently unused.
 
 ## Value
 

@@ -39,9 +39,12 @@ internal testing only.
 
 ## References
 
-A. Sadek and N. Limnios (2002). *Asymptotic properties of estimators for
-nonhomogeneous Markov chains*. Statistics & Probability Letters, 60(4),
-1839–1850.
+Sadek, A., and Limnios, N. (2002). *Asymptotic properties for maximum
+likelihood estimators for reliability and failure rates of Markov
+chains*. Communications in Statistics - Theory and Methods, 31(10),
+1837–1861.
+[doi:10.1081/STA-120014916](https://doi.org/10.1081/STA-120014916) . See
+Theorem 4 (p. 1847) for the component-wise covariance construction.
 
 ## See also
 
@@ -51,38 +54,7 @@ nonhomogeneous Markov chains*. Statistics & Probability Letters, 60(4),
 ## Examples
 
 ``` r
-# Choose the transition probability matrix and the initial law of the MC
-a <- c(0.5, 0.5, 0)
-P <- matrix(c(0.3, 0.7, 0,
-              0.6, 0.1, 0.3,
-              0.5, 0,   0.5), nrow = 3, ncol = 3, byrow = TRUE)
-
-# Create a Markov Chain
-x <- MarkovChain(a = a, P = P)
-
-# Find Stationary distribution
-pi_vec <- stat(x)
-
-# Simulate a single trajectory of length m
-m <- 1e4
-traj <- sim(m, x)
-
-# Estimate the transition probability matrix
-y <- fit(traj)
-
-# Make a list of Markov Chains
-L <- MarkovChainList(list(x, y))
-L[[1]]
-#> Markov Chain
-#>   Number of states: 3 
-#> 
-#>   Initial distribution (a):
-#>       1   2   3 
-#>     0.5 0.5 0.0 
-#> 
-#>   Transition matrix (P):
-#>         1   2   3
-#>     1 0.3 0.7 0.0
-#>     2 0.6 0.1 0.3
-#>     3 0.5 0.0 0.5
+P <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE))
+all.equal(markov:::vcov_pk_sl(P, k = 2L), vcov_pk(P, k = 2L))
+#> [1] TRUE
 ```

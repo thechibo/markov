@@ -73,22 +73,42 @@ probability matrix <code>P</code>. Both are validated and coerced to classes
 
 
 <dl><dt id="arg-a">a<a class="anchor" aria-label="anchor" href="#arg-a"></a></dt>
-<dd><p>Numeric, initial law.</p></dd>
+<dd><p>Numeric vector of initial state probabilities, one per row of <code>P</code>.</p></dd>
 
 
 <dt id="arg-p">P<a class="anchor" aria-label="anchor" href="#arg-p"></a></dt>
-<dd><p>Numeric matrix, transition probabilities (square row‐stochastic).</p></dd>
+<dd><p>Square numeric row-stochastic matrix of transition probabilities.
+See <code><a href="state_names.html">set_state_names()</a></code> for the default names assigned during construction.</p></dd>
 
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>For <code>MarkovChainList()</code>, a list of <code>MarkovChain</code> objects.</p></dd>
+<dd><p>An object to check with <code>is.MarkovChain()</code>, a <code>MarkovChain</code> to
+validate or print, a list of valid chains to construct a <code>MarkovChainList</code>,
+or a <code>MarkovChainList</code> to subset.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Number of significant digits used to round displayed values.
+Defaults to <code>getOption("digits")</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Additional arguments passed to <code><a href="https://rdrr.io/r/base/print.html" class="external-link">base::print()</a></code> for the initial
+distribution and transition matrix.</p></dd>
+
+
+<dt id="arg-i">i<a class="anchor" aria-label="anchor" href="#arg-i"></a></dt>
+<dd><p>A numeric, character, or logical index for list subsetting. If
+omitted, all elements are selected.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list with class <code>"MarkovChain"</code> and elements <code>a</code> and <code>P</code>. Errors on
-validation failure.</p>
-<p>For <code>MarkovChainList()</code>, an object of class <code>"MarkovChainList"</code>.</p>
+    <p><code>MarkovChain()</code> returns a list of class <code>"MarkovChain"</code> with elements <code>a</code> and
+<code>P</code>. <code>is.MarkovChain()</code> returns a single logical value. The print method
+invisibly returns the validated chain.</p>
+<p><code>MarkovChainList()</code> and its subsetting method return an object of
+class <code>"MarkovChainList"</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="structure">Structure<a class="anchor" aria-label="anchor" href="#structure"></a></h2>
@@ -109,13 +129,18 @@ validation failure.</p>
 <p>A valid <code>MarkovChain</code> must satisfy:</p><ul><li><p>has exactly two elements named <code>"a"</code> and <code>"P"</code></p></li>
 <li><p><code>a</code> validates as <code>StochVec</code></p></li>
 <li><p><code>P</code> validates as <code>StochMat</code></p></li>
+<li><p><code>length(a)</code> equals <code>nrow(P)</code></p></li>
+<li><p>the names of <code>a</code> and the row and column names of <code>P</code> are identical,
+in the same order</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="markovchainlist">MarkovChainList<a class="anchor" aria-label="anchor" href="#markovchainlist"></a></h2>
 
 
 <p><code>MarkovChainList()</code> constructs a container of multiple <code>MarkovChain</code> objects.
-All elements must be of class <code>"MarkovChain"</code>. Subsetting preserves the class.</p>
+All elements must be of class <code>"MarkovChain"</code>. Subsetting preserves the class.
+Subsets containing invalid elements, including <code>NULL</code> from <code>NA</code> or
+out-of-range indices, are rejected. Empty subsets are allowed.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

@@ -20,7 +20,9 @@ is_rec_class(P, c)
 
 ## Value
 
-`TRUE` if no transitions lead outside the class; otherwise `FALSE`.
+`TRUE` for a closed communicating class and `FALSE` for a transient
+communicating class. An error is raised if `c` does not identify a
+communicating class.
 
 ## Examples
 

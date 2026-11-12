@@ -77,9 +77,12 @@ component-wise expressions. It is used for internal testing only.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>A. Sadek and N. Limnios (2002).
-<em>Asymptotic properties of estimators for nonhomogeneous Markov chains</em>.
-Statistics &amp; Probability Letters, 60(4), 1839–1850.</p>
+    <p>Sadek, A., and Limnios, N. (2002).
+<em>Asymptotic properties for maximum likelihood estimators for reliability and failure rates of Markov chains</em>.
+Communications in Statistics - Theory and Methods, 31(10), 1837–1861.
+<a href="https://doi.org/10.1081/STA-120014916" class="external-link">doi:10.1081/STA-120014916</a>
+.
+See Theorem 4 (p. 1847) for the component-wise covariance construction.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -89,40 +92,10 @@ one-step asymptotic covariance matrix.</p></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Choose the transition probability matrix and the initial law of the MC</span></span></span>
-<span class="r-in"><span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="fl">0</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">P</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">0.7</span>, <span class="fl">0</span>,</span></span>
-<span class="r-in"><span>              <span class="fl">0.6</span>, <span class="fl">0.1</span>, <span class="fl">0.3</span>,</span></span>
-<span class="r-in"><span>              <span class="fl">0.5</span>, <span class="fl">0</span>,   <span class="fl">0.5</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">3</span>, ncol <span class="op">=</span> <span class="fl">3</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">P</span> <span class="op">&lt;-</span> <span class="fu"><a href="StochMat.html">StochMat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.8</span>, <span class="fl">0.2</span>, <span class="fl">0.3</span>, <span class="fl">0.7</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">2</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu">markov</span><span class="fu">:::</span><span class="fu">vcov_pk_sl</span><span class="op">(</span><span class="va">P</span>, k <span class="op">=</span> <span class="fl">2L</span><span class="op">)</span>, <span class="fu"><a href="vcov_pk.html">vcov_pk</a></span><span class="op">(</span><span class="va">P</span>, k <span class="op">=</span> <span class="fl">2L</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Create a Markov Chain</span></span></span>
-<span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="MarkovChain.html">MarkovChain</a></span><span class="op">(</span>a <span class="op">=</span> <span class="va">a</span>, P <span class="op">=</span> <span class="va">P</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Find Stationary distribution</span></span></span>
-<span class="r-in"><span><span class="va">pi_vec</span> <span class="op">&lt;-</span> <span class="fu"><a href="stat.html">stat</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Simulate a single trajectory of length m</span></span></span>
-<span class="r-in"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fl">1e4</span></span></span>
-<span class="r-in"><span><span class="va">traj</span> <span class="op">&lt;-</span> <span class="fu"><a href="sim.html">sim</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">x</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Estimate the transition probability matrix</span></span></span>
-<span class="r-in"><span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit.html">fit</a></span><span class="op">(</span><span class="va">traj</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Make a list of Markov Chains</span></span></span>
-<span class="r-in"><span><span class="va">L</span> <span class="op">&lt;-</span> <span class="fu"><a href="MarkovChain.html">MarkovChainList</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">L</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Markov Chain</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Number of states: 3 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Initial distribution (a):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       1   2   3 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     0.5 0.5 0.0 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Transition matrix (P):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         1   2   3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     1 0.3 0.7 0.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     2 0.6 0.1 0.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     3 0.5 0.0 0.5</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -25,6 +25,19 @@ stat_on_class(P, c)
 A `StochVec` containing the stationary probabilities. States outside the
 recurrent class have probability zero.
 
+## Details
+
+The stationary probabilities within the class are computed with the
+Grassmann, Taksar and Heyman (1985) algorithm, using off-diagonal
+transition probabilities.
+
+## References
+
+Grassmann, W. K., Taksar, M. I., and Heyman, D. P. (1985). Regenerative
+Analysis and Steady State Distributions for Markov Chains. *Operations
+Research*, 33(5), 1107–1116.
+[doi:10.1287/opre.33.5.1107](https://doi.org/10.1287/opre.33.5.1107)
+
 ## Examples
 
 ``` r

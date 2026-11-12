@@ -33,22 +33,44 @@ x[i]
 
 - a:
 
-  Numeric, initial law.
+  Numeric vector of initial state probabilities, one per row of `P`.
 
 - P:
 
-  Numeric matrix, transition probabilities (square row‐stochastic).
+  Square numeric row-stochastic matrix of transition probabilities. See
+  [`set_state_names()`](state_names.md) for the default names assigned
+  during construction.
 
 - x:
 
-  For `MarkovChainList()`, a list of `MarkovChain` objects.
+  An object to check with `is.MarkovChain()`, a `MarkovChain` to
+  validate or print, a list of valid chains to construct a
+  `MarkovChainList`, or a `MarkovChainList` to subset.
+
+- digits:
+
+  Number of significant digits used to round displayed values. Defaults
+  to `getOption("digits")`.
+
+- ...:
+
+  Additional arguments passed to
+  [`base::print()`](https://rdrr.io/r/base/print.html) for the initial
+  distribution and transition matrix.
+
+- i:
+
+  A numeric, character, or logical index for list subsetting. If
+  omitted, all elements are selected.
 
 ## Value
 
-A list with class `"MarkovChain"` and elements `a` and `P`. Errors on
-validation failure.
+`MarkovChain()` returns a list of class `"MarkovChain"` with elements
+`a` and `P`. `is.MarkovChain()` returns a single logical value. The
+print method invisibly returns the validated chain.
 
-For `MarkovChainList()`, an object of class `"MarkovChainList"`.
+`MarkovChainList()` and its subsetting method return an object of class
+`"MarkovChainList"`.
 
 ## Structure
 
@@ -72,11 +94,18 @@ A valid `MarkovChain` must satisfy:
 
 - `P` validates as `StochMat`
 
+- `length(a)` equals `nrow(P)`
+
+- the names of `a` and the row and column names of `P` are identical, in
+  the same order
+
 ## MarkovChainList
 
 `MarkovChainList()` constructs a container of multiple `MarkovChain`
 objects. All elements must be of class `"MarkovChain"`. Subsetting
-preserves the class.
+preserves the class. Subsets containing invalid elements, including
+`NULL` from `NA` or out-of-range indices, are rejected. Empty subsets
+are allowed.
 
 ## See also
 

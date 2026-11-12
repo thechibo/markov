@@ -41,7 +41,7 @@ sequence of states.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">fit</span><span class="op">(</span><span class="va">x</span>, init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"realized"</span>, <span class="st">"uniform"</span>, <span class="st">"stationary"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">fit</span><span class="op">(</span><span class="va">x</span>, init <span class="op">=</span> <span class="st">"realized"</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -49,8 +49,9 @@ sequence of states.</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A vector of observed states in time order. Can be numeric, character,
-factor, or ordered. Must have length at least 2 and contain no <code>NA</code>s.</p></dd>
+<dd><p>An atomic vector or factor of observed states in time order.
+Must have no dimensions, have length at least 2, and contain no <code>NA</code>s.
+State labels must be non-empty.</p></dd>
 
 
 <dt id="arg-init">init<a class="anchor" aria-label="anchor" href="#arg-init"></a></dt>
@@ -75,15 +76,16 @@ Must be exactly one of:</p><dl><dt><code>"uniform"</code></dt>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The state space is defined as <code>unique(x)</code>. If <code>x</code> is numeric or ordered, the
-states are sorted; otherwise, the first-appearance order is used.</p>
+states are sorted; otherwise, the first-appearance order is used.
+Numeric state labels use additional precision when needed to distinguish
+values with identical default character representations.</p>
 <p>The function computes the empirical transition frequencies and normalizes by
 row to obtain a transition probability matrix.</p>
 <p>If a state never appears as an origin (i.e., it is never observed at times
 <code>t = 1, ..., n-1</code>), the corresponding transition row has no empirical counts.
 In that case the function treats that state as absorbing (probability 1 on the
 diagonal) and emits a warning.</p>
-<p>A numerical cleanup step will rescale rows if their sums deviate from 1 by
-by more than 1e-12 (tolerance), emitting a warning.</p>
+<p>The row-normalized transition matrix is validated by <code><a href="StochMat.html">StochMat()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

@@ -21,6 +21,7 @@ is_com_class(P, c)
 ## Value
 
 `TRUE` if `c` identifies a communicating class; otherwise `FALSE`.
+Invalid state names raise an error.
 
 ## Examples
 

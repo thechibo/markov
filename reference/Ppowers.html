@@ -49,17 +49,18 @@ multiplication.</p>
 
 
 <dl><dt id="arg-p">P<a class="anchor" aria-label="anchor" href="#arg-p"></a></dt>
-<dd><p>A square numeric transition matrix.</p></dd>
+<dd><p>A nonempty square numeric matrix with finite entries.</p></dd>
 
 
 <dt id="arg-k">k<a class="anchor" aria-label="anchor" href="#arg-k"></a></dt>
-<dd><p>A positive integer giving the highest matrix power to compute.</p></dd>
+<dd><p>A single positive integer giving the highest matrix power to compute.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list of <code>k + 1</code> matrices. Element <code>j + 1</code> contains \(P^j\), beginning
-with the identity matrix \(P^0\).</p>
+with the identity matrix \(P^0\). The matrices preserve the row and
+column names of <code>P</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
