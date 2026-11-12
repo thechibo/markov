@@ -15,7 +15,7 @@
 #' @param k A positive integer specifying the transition step. Thus,
 #'   \eqn{k = 1} corresponds to the one-step transition matrix, \eqn{k = 2}
 #'   to the two-step transition matrix, and so forth.
-#' @param ... Additional arguments passed to [vcov_p()].
+#' @param ... Additional arguments passed to methods. Currently unused.
 #'
 #' @details
 #' Let \eqn{\widehat P(n)} denote the empirical estimator of the one-step
@@ -33,7 +33,7 @@
 #' \deqn{
 #'   W_{\mathbf p^{(k)}}
 #'   =
-#'   \mathrm{vec}\left(W_{P^k}^{\mathMk T}\right)
+#'   \mathrm{vec}\left(W_{P^k}^{\top}\right)
 #'   \sim
 #'   \mathcal N_{s^2}
 #'   \left(
@@ -45,7 +45,7 @@
 #' \deqn{
 #'   \Sigma_{\mathbf p^{(k)}}
 #'   =
-#'   M_k \Sigma_{\mathbf p} M_k^{\mathMk T},
+#'   M_k \Sigma_{\mathbf p} M_k^{\top},
 #' }
 #'
 #' where
@@ -54,7 +54,7 @@
 #'   =
 #'   \sum_{i=0}^{k-1}
 #'   P^i \mathbin{\otimes}
-#'   \left(P^{k-1-i}\right)^{\mathMk T},
+#'   \left(P^{k-1-i}\right)^{\top},
 #' }
 #' and \eqn{\otimes} denotes the Kronecker product.
 #'
@@ -66,15 +66,22 @@
 #' \eqn{\Sigma_{\mathbf p^{(k)}}}, where \eqn{s} is the number of states.
 #'
 #' @references
-#' GSI
+#' Gavrilopoulos, G., Trevezas, S., and Votsi, I. (2026).
+#' \emph{Matrix asymptotic calculus for plug-in maximum likelihood estimators in finite Markov chains}.
+#' arXiv preprint arXiv:2607.17161. \url{https://arxiv.org/abs/2607.17161}.
+#' See Proposition 4 for the matrix differential and its Kronecker representation.
 #'
-#' A. Sadek and N. Limnios (2002).
-#' \emph{Asymptotic properties of estimators for nonhomogeneous Markov chains}.
-#' Statistics & Probability Letters, 60(4), 1839–1850.
+#' Sadek, A., and Limnios, N. (2002).
+#' \emph{Asymptotic properties for maximum likelihood estimators for reliability and failure rates of Markov chains}.
+#' Communications in Statistics - Theory and Methods, 31(10), 1837--1861.
+#' \doi{10.1081/STA-120014916}.
 #' See Theorem 4 (p. 1847) for the asymptotic covariance matrix of the k-step
 #' transition probabilities.
 #'
-#' @inherit MarkovChain examples
+#' @examples
+#' P <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE))
+#' dim(vcov_pk(P, k = 2L))
+#' identical(vcov_pk(P, k = 1L), vcov_p(P))
 #'
 #' @seealso
 #' [vcov_p()] for the one-step asymptotic covariance matrix.
@@ -87,25 +94,37 @@ vcov_pk <- function(x, k, ...) {
 #' @rdname vcov_pk
 #' @export
 vcov_pk.MarkovChain <- function(x, k, ...) {
-  vcov_pk(x$P, k = k, ...)
+  x <- validate_MarkovChain(x)
+  method <- validated_stochmat_method(x$P, vcov_pk_validated, vcov_pk)
+  method(x$P, k = k, ...)
 }
 
 #' @rdname vcov_pk
 #' @importFrom fastmatrix kronecker.prod
 #' @export
 vcov_pk.StochMat <- function(x, k, ...) {
+  vcov_pk_validated(validate_StochMat(x), k = k, ...)
+}
 
-  if (k == 1) {
-    return(vcov_p(x))
-  } else {
-    s <- nstates(x)
-    Pk <- Ppowers(x, k - 1) # P ^ 0, P ^ 1, ..., P ^ {k - 1}
-    Mk <- matrix(0, s ^ 2, s ^ 2)
-    for (i in 1:k) {
-      Mk <- Mk + fastmatrix::kronecker.prod(Pk[[i]], t(Pk[[k - i + 1]]))
-    }
-    return(Mk %*% vcov_p(x) %*% t(Mk))
+vcov_pk_validated <- function(x, k, ...) {
+  if (length(k) != 1L || !is.null(dim(k)) || !is_positive_integer(k)) {
+    stop("`k` must be a single positive integer.", call. = FALSE)
   }
+  k <- as.integer(k)
+
+  if (k == 1L) {
+    method <- validated_stochmat_method(x, vcov_p_validated, vcov_p)
+    return(method(x))
+  }
+
+  Gamma <- transition_covariance_sparse(x)
+  s <- nstates(x)
+  Pk <- Ppowers(x, k - 1L) # P ^ 0, P ^ 1, ..., P ^ {k - 1}
+  Mk <- matrix(0, s ^ 2, s ^ 2)
+  for (i in seq_len(k)) {
+    Mk <- Mk + fastmatrix::kronecker.prod(Pk[[i]], t(Pk[[k - i + 1L]]))
+  }
+  tcrossprod(as.matrix(Mk %*% Gamma), Mk)
 }
 
 #' @rdname vcov_pk
@@ -138,26 +157,44 @@ vcov_pk.default <- function(x, k, ...) {
 #'   \eqn{\Sigma_{\mathbf p(k)}}, where \eqn{s} is the number of states.
 #'
 #' @references
-#' A. Sadek and N. Limnios (2002).
-#' \emph{Asymptotic properties of estimators for nonhomogeneous Markov chains}.
-#' Statistics & Probability Letters, 60(4), 1839--1850.
+#' Sadek, A., and Limnios, N. (2002).
+#' \emph{Asymptotic properties for maximum likelihood estimators for reliability and failure rates of Markov chains}.
+#' Communications in Statistics - Theory and Methods, 31(10), 1837--1861.
+#' \doi{10.1081/STA-120014916}.
+#' See Theorem 4 (p. 1847) for the component-wise covariance construction.
 #'
 #' @seealso [vcov_pk()] for the primary implementation and [vcov_p()] for the
 #'   one-step asymptotic covariance matrix.
 #'
-#' @inherit MarkovChain examples
+#' @examples
+#' P <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE))
+#' all.equal(markov:::vcov_pk_sl(P, k = 2L), vcov_pk(P, k = 2L))
 #'
 #' @keywords internal
 vcov_pk_sl <- function(x, k) {
+  if (length(k) != 1L || !is.null(dim(k)) || !is_positive_integer(k)) {
+    stop("`k` must be a single positive integer.", call. = FALSE)
+  }
+  k <- as.integer(k)
+  if (inherits(x, "MarkovChain")) {
+    x <- validate_MarkovChain(x)$P
+  } else {
+    if (!inherits(x, "StochMat")) {
+      stop("`x` must be a `MarkovChain` or `StochMat` object.", call. = FALSE)
+    }
+    x <- validate_StochMat(x)
+  }
+  method <- validated_stochmat_method(x, vcov_p_validated, vcov_p)
+  Gamma <- method(x)
 
   if (k == 1) {
-    return(vcov_p(x))
+    return(Gamma)
   } else {
 
     # Preliminaries
     s <- nstates(x)
     Mk <- matrix(0, nrow = s ^ 2, ncol = s ^ 2)
-    Pk <- Ppowers(x$P, k - 1)[-1] # P ^ 1, ..., P ^ {k - 1}
+    Pk <- Ppowers(x, k - 1)[-1] # P ^ 1, ..., P ^ {k - 1}
 
     for (i in 1:s) {
       for (j in 1:s) {
@@ -179,6 +216,6 @@ vcov_pk_sl <- function(x, k) {
       }
     }
 
-    return(Mk %*% vcov_p(x) %*% t(Mk))
+    return(Mk %*% Gamma %*% t(Mk))
   }
 }

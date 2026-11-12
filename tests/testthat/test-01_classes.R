@@ -103,11 +103,37 @@ test_that("StochMat() rejects materially negative values", {
 })
 
 test_that("StochMat() clips tiny negative values and renormalizes rows", {
-  P <- matrix(c(-1e-13, 1 + 1e-13,
-                0.4, 0.6), nrow = 2, byrow = TRUE)
-  observed <- StochMat(P)
-  expect_equal(as.numeric(observed[1, ]), c(0, 1), tolerance = 1e-12)
-  expect_equal(as.numeric(rowSums(observed)), c(1, 1), tolerance = 1e-12)
+  for (negative in c(-1e-16, -1e-17)) {
+    P <- matrix(c(negative, 1 + 5e-13,
+                  0.4, 0.6), nrow = 2, byrow = TRUE)
+    expect_warning(observed <- StochMat(P),
+                   "set to zero and rows were normalized")
+    expect_identical(as.numeric(observed[1, ]), c(0, 1))
+    expect_equal(as.numeric(rowSums(observed)), c(1, 1), tolerance = 1e-15)
+    expect_true(all(observed >= 0))
+    expect_identical(P[1, 1], negative)
+    expect_silent(is.StochMat(observed))
+  }
+})
+
+test_that("StochMat() rejects negatives below the new tolerance", {
+  for (negative in c(-1.01e-16, -1e-15, -1e-13)) {
+    P <- matrix(c(negative, 1, 0.4, 0.6), nrow = 2, byrow = TRUE)
+    expect_error(StochMat(P), "must be >= 0")
+    expect_false(is.StochMat(new_StochMat(P)))
+  }
+})
+
+test_that("StochMat() does not warn for nonnegative inputs", {
+  expect_silent(StochMat(diag(2)))
+  expect_silent(StochMat(make_test_matrix()))
+})
+
+test_that("is.StochMat() checks tolerated negatives without changing input", {
+  P <- new_StochMat(matrix(c(-1e-17, 1, 0.4, 0.6), 2, byrow = TRUE))
+  expect_silent(valid <- is.StochMat(P))
+  expect_true(valid)
+  expect_identical(P[1, 1], -1e-17)
 })
 
 test_that("StochMat() rejects rows that do not sum to one", {
@@ -270,6 +296,95 @@ test_that("subsetting MarkovChainList preserves its class", {
   expect_length(observed, 1)
   expect_identical(names(observed), "second")
   expect_s3_class(observed[[1]], "MarkovChain")
+})
+
+test_that("MarkovChain validation returns cleaned components", {
+  chain <- make_test_chain(c("A" = 1, "B" = 0))
+  chain$a[1] <- 1 + 5e-13
+  chain$P[1, ] <- c(-1e-17, 1 + 5e-13)
+  original <- chain
+
+  cleaned <- validate_MarkovChain(chain)
+
+  expect_identical(as.numeric(cleaned$a), c(1, 0))
+  expect_identical(as.numeric(cleaned$P[1, ]), c(0, 1))
+  expect_equal(as.numeric(rowSums(cleaned$P)), c(1, 1), tolerance = 1e-15)
+  expect_identical(names(cleaned$a), names(chain$a))
+  expect_identical(dimnames(cleaned$P), dimnames(chain$P))
+  expect_true(is.MarkovChain(cleaned))
+  expect_identical(chain, original)
+})
+
+test_that("MarkovChainList subsetting rejects invalid resulting elements", {
+  chains <- MarkovChainList(list(first = make_test_chain()))
+  for (index in list(2, NA_integer_, "missing", c(TRUE, TRUE))) {
+    expect_error(chains[index], "valid MarkovChain")
+  }
+  chains[[1]]$a[1] <- -1
+  expect_error(chains[1], "valid MarkovChain")
+})
+
+test_that("MarkovChainList subsetting preserves valid empty and repeated subsets", {
+  chains <- MarkovChainList(list(first = make_test_chain(),
+                               second = make_test_chain()))
+  for (index in list(integer(), FALSE, -c(1, 2))) {
+    observed <- chains[index]
+    expect_s3_class(observed, "MarkovChainList")
+    expect_length(observed, 0)
+  }
+  expect_identical(chains[], chains)
+  expect_identical(chains["second"], chains[2])
+  repeated <- chains[c(2, 1, 2)]
+  expect_identical(names(repeated), c("second", "first", "second"))
+  expect_true(all(vapply(repeated, is.MarkovChain, logical(1))))
+})
+
+test_that("MarkovChain validation rejects corrupted components", {
+  for (component in c("a", "P")) {
+    for (value in c(-1, 2, NA_real_, Inf)) {
+      chain <- make_test_chain()
+      chain[[component]][1] <- value
+      expect_false(is.MarkovChain(chain))
+      expect_error(validate_MarkovChain(chain), "must be a valid")
+      expect_error(sim(2, chain), "must be a valid")
+      expect_error(MarkovChainList(list(chain)), "valid MarkovChain")
+    }
+    chain <- make_test_chain()
+    chain[[component]] <- unclass(chain[[component]])
+    expect_false(is.MarkovChain(chain))
+  }
+})
+
+test_that("MarkovChain validation requires exactly one a and one P", {
+  chain <- make_test_chain()
+  malformed <- list(
+    chain["a"],
+    chain["P"],
+    list(a = chain$a, a = chain$a),
+    list(a = chain$a, P = chain$P, a = chain$a),
+    unname(unclass(chain))
+  )
+  for (x in malformed) {
+    class(x) <- c("MarkovChain", "list")
+    expect_false(is.MarkovChain(x))
+    expect_error(validate_MarkovChain(x), "exactly two elements")
+  }
+  expect_error(validate_MarkovChain(unclass(chain)), "MarkovChain object")
+  reversed <- structure(unclass(chain)[c("P", "a")],
+                        class = c("MarkovChain", "list"))
+  expect_true(is.MarkovChain(reversed))
+})
+
+test_that("stochastic constructors reject invalid state labels", {
+  invalid_names <- list(c("A", "A"), c("A", NA_character_), c("A", ""))
+  for (labels in invalid_names) {
+    expect_error(StochVec(setNames(c(0.4, 0.6), labels)), "State names")
+    P <- make_test_matrix()
+    dimnames(P) <- list(labels, labels)
+    expect_error(StochMat(P), "State names")
+  }
+  expect_error(StochMat(matrix(numeric(), 0, 0)), "non-empty")
+  expect_error(StochVec(numeric()))
 })
 
 test_that("MarkovChainList() accepts an empty list", {

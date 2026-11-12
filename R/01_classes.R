@@ -10,9 +10,6 @@
 #' @keywords internal
 new_StochVec <- function(...) {
   x <- c(...)
-  if (inherits(x, "StochVec")) {
-    return(x)
-  }
   structure(x, class = c("StochVec", "numeric"))
 }
 
@@ -33,8 +30,10 @@ validate_StochVec <- function(x, tol = 1e-12) {
 
   total <- sum(x)
   if (abs(total - 1) > tol) {
-    stop("Values must sum to 1 within numerical tolerance.",
-         call. = FALSE)
+    stop(
+      sprintf("Values must sum to 1 within %g. Observed sum: %.17g.", tol, total),
+      call. = FALSE
+    )
   }
 
   # Set and check the state names
@@ -46,23 +45,34 @@ validate_StochVec <- function(x, tol = 1e-12) {
 #' @title Stochastic Vector Class
 #'
 #' @description
-#' Construct and validate a stochastic vector: a numeric vector whose components
-#' are strictly non-missing, strictly positive, and sum to exactly 1. The
-#' returned object has S3 class `"StochVec"` and underlying storage `"numeric"`.
+#' Construct and validate a stochastic vector of finite, nonnegative
+#' probabilities. The returned object has S3 class `"StochVec"`.
+#'
+#' @details
+#' If the sum differs from one by at most `1e-12`, `StochVec()` divides
+#' every entry by that sum without a warning. A larger deviation is an error.
 #'
 #' @section Validation:
 #' A valid `StochVec` must satisfy all of:
 #' \itemize{
-#'   \item no `NA`s
-#'   \item all entries are `> 0`
-#'   \item `sum(x) == 1`
+#'   \item all entries are finite and nonnegative
+#'   \item the sum is within `1e-12` of one
+#'   \item state names are unique, non-missing, and non-empty
 #' }
 #'
-#' @param ... Numeric values coerceable to a flat numeric vector.
+#' @param ... For the constructors, numeric values combined into a flat vector.
+#'   For the print method, additional arguments passed to [base::print()].
+#' @param x An object to check with `is.StochVec()`, or a `StochVec` to validate
+#'   or print.
+#' @param tol Nonnegative numeric tolerance for the absolute difference between
+#'   the sum and one. The validator defaults to `1e-12`.
+#' @param digits Number of significant digits used to round displayed values.
+#'   Defaults to `getOption("digits")`.
 #'
 #' @return
-#' A `numeric` vector with additional class `"StochVec"`. If validation fails,
-#' an error is thrown.
+#' The constructors and validator return a numeric vector of class
+#' `"StochVec"`. `is.StochVec()` returns a single logical value. The print method
+#' invisibly returns the validated vector.
 #'
 #' @importFrom utils capture.output
 #' @examples
@@ -141,6 +151,9 @@ validate_StochMat <- function(x, tol = 1e-12) {
   if (!is.matrix(x) || (nrow(x) != ncol(x))) {
     stop("Input must be a square matrix.", call. = FALSE)
   }
+  if (nrow(x) == 0L) {
+    stop("The state space must be non-empty.", call. = FALSE)
+  }
   if (!is.numeric(x)) {
     stop("Input must be a numeric matrix.", call. = FALSE)
   }
@@ -149,16 +162,20 @@ validate_StochMat <- function(x, tol = 1e-12) {
   }
 
   # Allow tiny negatives from floating point.
-  if (any(x < - tol)) {
+  if (any(x < -1e-16)) {
     stop("All values must be >= 0 (within numerical tolerance).", call. = FALSE)
   }
   x[x < 0] <- 0
 
-  # Pure validation: accept if close enough, otherwise error.
+  # Check the row sums after clipping.
   rs <- rowSums(x)
-  if (any(abs(rs - 1) > tol)) {
+  bad_row <- match(TRUE, abs(rs - 1) > tol, nomatch = 0L)
+  if (bad_row != 0L) {
     stop(
-      "Row values must sum to 1 within numerical tolerance.",
+      sprintf(
+        "Row values must sum to 1 within %g. Row %d sums to %.17g.",
+        tol, bad_row, rs[bad_row]
+      ),
       call. = FALSE
     )
   }
@@ -172,26 +189,42 @@ validate_StochMat <- function(x, tol = 1e-12) {
 #' @title Stochastic Matrix Class
 #'
 #' @description
-#' Construct and validate a stochastic matrix: a square numeric matrix whose
-#' entries are strictly non-missing, strictly positive, and each row sums to
-#' exactly 1. The returned object has S3 class `"StochMat"` and underlying
-#' storage `"matrix"`.
+#' Construct and validate a square matrix of finite, nonnegative transition
+#' probabilities. The returned object has S3 class `"StochMat"`.
+#'
+#' @details
+#' Input entries below `-1e-16` are rejected. Entries in `[-1e-16, 0)`
+#' are set to zero. After clipping, each row sum must differ from one by at most
+#' `1e-12`. A larger deviation is an error. Each accepted row is divided by
+#' its sum. `StochMat()` warns only if it clips negative entries.
 #'
 #' @section Validation:
 #' A valid `StochMat` must satisfy all of:
 #' \itemize{
 #'   \item is a square matrix (`nrow(x) == ncol(x)`)
-#'   \item no `NA`s
-#'   \item all entries are `> 0`
-#'   \item `rowSums(x) == 1` for every row
+#'   \item has at least one state
+#'   \item all entries are finite and nonnegative
+#'   \item every row sum is within `1e-12` of one
+#'   \item state names are unique, non-missing, and non-empty
 #' }
 #'
-#' @param ... Objects coercible to a matrix. Passed to `matrix()` when needed.
-#' @param x For `new_StochMat()`, a matrix or something coercible to one.
+#' Assign the returned object to retain corrections. `is.StochMat()` only
+#' checks validity.
+#'
+#' @param ... For the constructors, data and arguments for [base::matrix()]
+#'   when the input is supplied as data rather than as a matrix. For the print
+#'   method, additional arguments passed to [base::print()].
+#' @param x For `new_StochMat()`, a matrix or data for [base::matrix()]. For
+#'   `is.StochMat()`, the object to check. For validation or printing, a `StochMat`.
+#' @param tol Nonnegative numeric tolerance for the absolute difference between
+#'   each row sum and one after clipping. The validator defaults to `1e-12`.
+#' @param digits Number of significant digits used to round displayed values.
+#'   Defaults to `getOption("digits")`.
 #'
 #' @return
-#' A matrix with additional class `"StochMat"`. If validation fails,
-#' an error is thrown.
+#' The constructors and validator return a matrix of class `"StochMat"`.
+#' `is.StochMat()` returns a single logical value. The print method invisibly
+#' returns the validated matrix.
 #'
 #' @examples
 #' StochMat(diag(3))
@@ -203,7 +236,13 @@ validate_StochMat <- function(x, tol = 1e-12) {
 #' @seealso [new_StochMat()], [validate_StochMat()], [is.StochMat()]
 #' @export
 StochMat <- function(...) {
-  validate_StochMat(new_StochMat(...))
+  x <- new_StochMat(...)
+  validated <- validate_StochMat(x)
+  if (any(x < 0)) {
+    warning("Tiny negative entries were set to zero and rows were normalized.",
+            call. = FALSE)
+  }
+  validated
 }
 
 #' @rdname StochMat
@@ -260,19 +299,39 @@ new_MarkovChain <- function(a, P) {
 #' @rdname MarkovChain
 #' @keywords internal
 validate_MarkovChain <- function(x) {
-  if (!all(names(x) %in% c("a", "P"))) {
-    stop("A Markov Chain must have two elements named 'a' and 'P'.")
+  if (!inherits(x, "MarkovChain") || !is.list(x)) {
+    stop("`x` must be a MarkovChain object.", call. = FALSE)
   }
-  is.StochVec(x$a)
-  is.StochMat(x$P)
+  if (length(x) != 2L || !setequal(names(x), c("a", "P"))) {
+    stop("A Markov Chain must have exactly two elements named 'a' and 'P'.",
+         call. = FALSE)
+  }
+  a <- tryCatch(validate_StochVec(x$a), error = function(e) NULL)
+  if (is.null(a) || !inherits(x$a, "StochVec")) {
+    stop("`a` must be a valid StochVec object.", call. = FALSE)
+  }
+  P <- tryCatch(validate_StochMat(x$P), error = function(e) NULL)
+  if (is.null(P) || !inherits(x$P, "StochMat")) {
+    stop("`P` must be a valid StochMat object.", call. = FALSE)
+  }
   if (length(x$a) != nrow(x$P)) {
     stop("The initial distribution and transition matrix must be of compatible dimensions.")
   }
   # Check the state names
-  if(!identical(get_state_names(x$a), get_state_names(x$P))) {
+  if (!identical(get_state_names(x$a), get_state_names(x$P))) {
     stop("The initial distribution and transition matrix must have identical state names.", call. = FALSE)
   }
+  x$a <- a
+  x$P <- P
   x
+}
+
+# Reuse validation for the package's StochMat class and dispatch on subclasses.
+validated_stochmat_method <- function(P, implementation, generic) {
+  if (identical(class(P), c("StochMat", "matrix"))) {
+    return(implementation)
+  }
+  generic
 }
 
 #' Markov Chain (S3) Class
@@ -295,14 +354,26 @@ validate_MarkovChain <- function(x) {
 #'   \item has exactly two elements named `"a"` and `"P"`
 #'   \item `a` validates as `StochVec`
 #'   \item `P` validates as `StochMat`
+#'   \item `length(a)` equals `nrow(P)`
+#'   \item the names of `a` and the row and column names of `P` are identical,
+#'     in the same order
 #' }
 #'
-#' @param a Numeric, initial law.
-#' @param P Numeric matrix, transition probabilities (square row‐stochastic).
+#' @param a Numeric vector of initial state probabilities, one per row of `P`.
+#' @param P Square numeric row-stochastic matrix of transition probabilities.
+#'   See [set_state_names()] for the default names assigned during construction.
+#' @param x An object to check with `is.MarkovChain()`, a `MarkovChain` to
+#'   validate or print, a list of valid chains to construct a `MarkovChainList`,
+#'   or a `MarkovChainList` to subset.
+#' @param digits Number of significant digits used to round displayed values.
+#'   Defaults to `getOption("digits")`.
+#' @param ... Additional arguments passed to [base::print()] for the initial
+#'   distribution and transition matrix.
 #'
 #' @return
-#' A list with class `"MarkovChain"` and elements `a` and `P`. Errors on
-#' validation failure.
+#' `MarkovChain()` returns a list of class `"MarkovChain"` with elements `a` and
+#' `P`. `is.MarkovChain()` returns a single logical value. The print method
+#' invisibly returns the validated chain.
 #'
 #' @seealso [StochVec()], [StochMat()], [is.MarkovChain()]
 #' @export
@@ -397,10 +468,13 @@ new_MarkovChainList <- function(x) {
 #' @rdname MarkovChain
 #' @keywords internal
 validate_MarkovChainList <- function(x) {
-
+  if (!is.list(x)) {
+    stop("`x` must be a list of valid MarkovChain objects.", call. = FALSE)
+  }
   for (i in seq_along(x)) {
-    if (!(is(x[[i]], "MarkovChain"))) {
-      stop("All list elements be of class MarkovChain. Stopped at index", i)
+    if (!is.MarkovChain(x[[i]])) {
+      stop("All list elements must be valid MarkovChain objects. Stopped at index ",
+           i, call. = FALSE)
     }
   }
 
@@ -412,10 +486,14 @@ validate_MarkovChainList <- function(x) {
 #' @section MarkovChainList:
 #' `MarkovChainList()` constructs a container of multiple `MarkovChain` objects.
 #' All elements must be of class `"MarkovChain"`. Subsetting preserves the class.
+#' Subsets containing invalid elements, including `NULL` from `NA` or
+#' out-of-range indices, are rejected. Empty subsets are allowed.
 #'
-#' @param x For `MarkovChainList()`, a list of `MarkovChain` objects.
+#' @param i A numeric, character, or logical index for list subsetting. If
+#'   omitted, all elements are selected.
 #'
-#' @return For `MarkovChainList()`, an object of class `"MarkovChainList"`.
+#' @return `MarkovChainList()` and its subsetting method return an object of
+#'   class `"MarkovChainList"`.
 #'
 #' @export
 MarkovChainList <- function(x) {
@@ -425,7 +503,7 @@ MarkovChainList <- function(x) {
 #' @rdname MarkovChain
 #' @export
 `[.MarkovChainList` <- function(x, i) {
-  new_MarkovChainList(NextMethod())
+  MarkovChainList(NextMethod())
 }
 
 setOldClass(c("MarkovChainList", "list"))

@@ -36,38 +36,24 @@ chain with stationary distribution \eqn{\pi}. If \eqn{\hat P} is the MLE of
 \eqn{\hat\pi = \pi(\hat P)} satisfies
 \deqn{\sqrt{n}(\hat\pi - \pi) \xrightarrow{d} \mathcal{N}(0, \Sigma_\pi).}
 
-The implementation uses the delta method in matrix form and Kronecker:
+The implementation applies the matrix delta method using a Kronecker product:
 \deqn{\Sigma_\pi = M\,\Gamma\,M^\top,}
-where \eqn{\Gamma} is the asymptotic covariance matrix of \eqn{\mathrm{vec}(\hat P)}
-returned by \code{\link[=vcov_p]{vcov_p()}}, and
-\deqn{M = \pi^\top \otimes (I - P^\top + \mathbf{1}\mathbf{1}^\top)^{-1}.}
+where \eqn{\Gamma} is the asymptotic covariance matrix for the row-wise
+vectorized transition estimator \eqn{\mathrm{vec}(\hat P^\top)} returned by
+\code{\link[=vcov_p]{vcov_p()}}. With \eqn{\pi} written as a row vector,
+\deqn{M = \pi \otimes (I - P^\top + \mathbf{1}\mathbf{1}^\top)^{-1}.}
 }
 \examples{
-# Choose the transition probability matrix and the initial law of the MC
-a <- c(0.5, 0.5, 0)
-P <- matrix(c(0.3, 0.7, 0,
-              0.6, 0.1, 0.3,
-              0.5, 0,   0.5), nrow = 3, ncol = 3, byrow = TRUE)
+P <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE))
+Sigma <- vcov_stat(P)
+dim(Sigma) # One stationary probability per state
 
-# Create a Markov Chain
-x <- MarkovChain(a = a, P = P)
-
-# Find Stationary distribution
-pi_vec <- stat(x)
-
-# Simulate a single trajectory of length m
-m <- 1e4
-traj <- sim(m, x)
-
-# Estimate the transition probability matrix
-y <- fit(traj)
-
-# Make a list of Markov Chains
-L <- MarkovChainList(list(x, y))
-L[[1]]
 }
 \references{
-GSI
+Gavrilopoulos, G., Trevezas, S., and Votsi, I. (2026).
+\emph{Matrix asymptotic calculus for plug-in maximum likelihood estimators in finite Markov chains}.
+arXiv preprint arXiv:2607.17161. \url{https://arxiv.org/abs/2607.17161}.
+See Proposition 7 for the stationary differential and covariance.
 }
 \seealso{
 \code{\link[=stat]{stat()}}, \code{\link[=vcov_p]{vcov_p()}}, \code{\link[=is_irreducible]{is_irreducible()}}

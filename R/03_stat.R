@@ -8,18 +8,24 @@
 #' Computes stationary distribution(s) of a finite-state, time-homogeneous
 #' Markov chain.
 #'
-#' @param x A `MarkovChain` or a `StochMat` object.
-#' @param ... Additional arguments passed to methods.
+#' @param x A valid `MarkovChain` or `StochMat` object.
+#' @param ... Additional arguments passed to methods. Currently unused.
 #'
 #' @details
 #' For a transition matrix \eqn{P}, a stationary distribution \eqn{\pi}
 #' satisfies \deqn{\pi^\top P = \pi^\top,\qquad \sum_i \pi_i = 1,\ \pi_i \ge 0.}
+#' For a `MarkovChain`, both components are validated and the stationary
+#' distribution depends only on the transition matrix.
 #'
 #' If the chain has a single closed communicating class, the stationary
 #' distribution is unique (though the chain may be periodic). If there are
 #' multiple closed communicating classes, stationary distributions are not
 #' unique. Every stationary distribution is a convex combination of the extremal
 #' ones, each supported on one closed class.
+#'
+#' The Grassmann, Taksar and Heyman (1985) algorithm, also known as GTH,
+#' computes the stationary probabilities within each closed class using
+#' off-diagonal transitions.
 #'
 #' This function returns:
 #' \itemize{
@@ -30,6 +36,12 @@
 #'
 #' @return
 #' A `StochVec` (unique recurrent class), or a list of `StochVec` objects.
+#'
+#' @references
+#' Grassmann, W. K., Taksar, M. I., and Heyman, D. P. (1985).
+#' Regenerative Analysis and Steady State Distributions for Markov Chains.
+#' \emph{Operations Research}, 33(5), 1107--1116.
+#' \doi{10.1287/opre.33.5.1107}
 #'
 #' @seealso [MarkovChain()], [sim()], [fit()]
 #'
@@ -42,19 +54,25 @@ stat <- function(x, ...) {
 
 #' @export
 stat.MarkovChain <- function(x, ...) {
-  stat(x$P, ...)
+  x <- validate_MarkovChain(x)
+  method <- validated_stochmat_method(x$P, stat_validated, stat)
+  method(x$P, ...)
 }
 
 #' @export
 stat.StochMat <- function(x, ...) {
+  stat_validated(validate_StochMat(x), ...)
+}
 
-  # Preliminaries
-  s <- nrow(x)
-  st_names <- get_state_names(x)
-
+stat_validated <- function(x, ...) {
   # Find extremals (stationary distributions for each recurrent class)
-  closed_classes <- Filter(function(c) {is_rec_class(x, c)}, mc_classes(x))
-  extremals <- lapply(closed_classes, function(c) {stat_on_class(x, c)})
+  closed_classes <- Filter(
+    function(states) is_closed_class(x, states),
+    mc_classes_validated(x)
+  )
+  extremals <- lapply(closed_classes, function(states) {
+    stat_on_closed_class(x, states)
+  })
 
   # Unique iff exactly one closed class
   if (length(closed_classes) == 1L) {
@@ -81,21 +99,28 @@ stat.StochMat <- function(x, ...) {
 #' \eqn{\hat\pi = \pi(\hat P)} satisfies
 #' \deqn{\sqrt{n}(\hat\pi - \pi) \xrightarrow{d} \mathcal{N}(0, \Sigma_\pi).}
 #'
-#' The implementation uses the delta method in matrix form and Kronecker:
+#' The implementation applies the matrix delta method using a Kronecker product:
 #' \deqn{\Sigma_\pi = M\,\Gamma\,M^\top,}
-#' where \eqn{\Gamma} is the asymptotic covariance matrix of \eqn{\mathrm{vec}(\hat P)}
-#' returned by [vcov_p()], and
-#' \deqn{M = \pi^\top \otimes (I - P^\top + \mathbf{1}\mathbf{1}^\top)^{-1}.}
+#' where \eqn{\Gamma} is the asymptotic covariance matrix for the row-wise
+#' vectorized transition estimator \eqn{\mathrm{vec}(\hat P^\top)} returned by
+#' [vcov_p()]. With \eqn{\pi} written as a row vector,
+#' \deqn{M = \pi \otimes (I - P^\top + \mathbf{1}\mathbf{1}^\top)^{-1}.}
 #'
 #' @return A numeric \eqn{s \times s} matrix, where \eqn{s} is the number of
 #' states, giving the asymptotic covariance matrix \eqn{\Sigma_\pi}.
 #'
 #' @references
-#' GSI
+#' Gavrilopoulos, G., Trevezas, S., and Votsi, I. (2026).
+#' \emph{Matrix asymptotic calculus for plug-in maximum likelihood estimators in finite Markov chains}.
+#' arXiv preprint arXiv:2607.17161. \url{https://arxiv.org/abs/2607.17161}.
+#' See Proposition 7 for the stationary differential and covariance.
 #'
 #' @seealso [stat()], [vcov_p()], [is_irreducible()]
 #'
-#' @inherit MarkovChain examples
+#' @examples
+#' P <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE))
+#' Sigma <- vcov_stat(P)
+#' dim(Sigma) # One stationary probability per state
 #'
 #' @export
 vcov_stat <- function(x, ...) {
@@ -105,27 +130,30 @@ vcov_stat <- function(x, ...) {
 #' @rdname vcov_stat
 #' @export
 vcov_stat.MarkovChain <- function(x, ...) {
-  vcov_stat(x$P, ...)
+  x <- validate_MarkovChain(x)
+  method <- validated_stochmat_method(x$P, vcov_stat_validated, vcov_stat)
+  method(x$P, ...)
 }
 
 #' @rdname vcov_stat
 #' @export
 vcov_stat.StochMat <- function(x, ...) {
+  vcov_stat_validated(validate_StochMat(x), ...)
+}
 
+vcov_stat_validated <- function(x, ...) {
   # Preliminaries
-  if (!is_irreducible(x)) {
-    stop("The Markov Chain must be irreducible.")
-  }
+  pi_vec <- stationary_for_covariance(x)
   s <- nstates(x)
   Is <- diag(s)
   A <- matrix(1, nrow = s, ncol = s)
-  pi_vec <- stat(x)
 
   # Delta-method transformation matrix
   M <- fastmatrix::kronecker.prod(matrix(pi_vec, nrow = 1L),
                                   solve(Is - t(x) + A))
 
-  tcrossprod(M %*% vcov_p(x), M)
+  Gamma <- transition_covariance_sparse(x, stationary = pi_vec)
+  tcrossprod(as.matrix(M %*% Gamma), M)
 }
 
 #' @rdname vcov_stat

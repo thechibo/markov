@@ -30,6 +30,8 @@
 #' the row and column names must be identical. An error is raised when they
 #' differ.
 #'
+#' State names must be unique, non-missing, and non-empty.
+#'
 #' For a `MarkovChain`, `get_state_names()` retrieves the row names of its
 #' transition matrix.
 #'
@@ -76,6 +78,10 @@ set_state_names.StochVec <- function(x, ...) {
   if (is.null(names(x))) {
     names(x) <- as.character(seq_along(x))
   }
+  if (anyNA(names(x)) || any(names(x) == "") || anyDuplicated(names(x))) {
+    stop("State names must be unique, non-missing, and non-empty.",
+         call. = FALSE)
+  }
   x
 }
 
@@ -90,6 +96,11 @@ set_state_names.StochMat <- function(x, ...) {
   }
   if (!identical(rownames(x), colnames(x))) {
     stop("Row and column names must be identical.", call. = FALSE)
+  }
+  if (anyNA(rownames(x)) || any(rownames(x) == "") ||
+      anyDuplicated(rownames(x))) {
+    stop("State names must be unique, non-missing, and non-empty.",
+         call. = FALSE)
   }
   x
 }
@@ -196,8 +207,8 @@ nstates.default <- function(x) {
 #' @description
 #' Partitions the states of a Markov chain into communicating classes.
 #'
-#' @param x A `MarkovChain` or `StochMat` object.
-#' @param ... Additional arguments passed to methods.
+#' @param x A valid `MarkovChain` or `StochMat` object.
+#' @param ... Additional arguments passed to methods. Currently unused.
 #'
 #' @return
 #' A list of character vectors containing the state names in each
@@ -221,13 +232,17 @@ mc_classes <- function(x, ...) UseMethod("mc_classes")
 #' @rdname mc_classes
 #' @export
 mc_classes.MarkovChain <- function(x, ...) {
-  mc_classes(x$P, ...)
+  x <- validate_MarkovChain(x)
+  mc_classes_validated(x$P)
 }
 
 #' @rdname mc_classes
 #' @export
 mc_classes.StochMat <- function(x, ...) {
+  mc_classes_validated(validate_StochMat(x))
+}
 
+mc_classes_validated <- function(x) {
   # Preliminaries
   state_names <- get_state_names(x)
   s <- nstates(x)
@@ -266,6 +281,7 @@ mc_classes.StochMat <- function(x, ...) {
 #' @param c A non-empty character or integer vector containing state names.
 #'
 #' @return `TRUE` if `c` identifies a communicating class; otherwise `FALSE`.
+#'   Invalid state names raise an error.
 #'
 #' @examples
 #' P <- StochMat(matrix(c(0.5, 0.5, 0,
@@ -278,11 +294,14 @@ mc_classes.StochMat <- function(x, ...) {
 #'
 #' @export
 is_com_class <- function(P, c) {
+  check_state_class(P, c)$communicating
+}
 
-  # Input Validation
+check_state_class <- function(P, c) {
   if (!inherits(P, "StochMat")) {
     stop("`P` must be a `StochMat` object.", call. = FALSE)
   }
+  P <- validate_StochMat(P)
   if (length(c) == 0L) {
     stop("`c` must be a non-empty vector.", call. = FALSE)
   }
@@ -295,8 +314,9 @@ is_com_class <- function(P, c) {
     stop("All values in `c` must be valid state names.", call. = FALSE)
   }
 
-  classes <- mc_classes(P)
-  any(vapply(classes, function(x) { setequal(x, class_names) }, logical(1)))
+  classes <- mc_classes_validated(P)
+  communicating <- any(vapply(classes, setequal, logical(1), y = class_names))
+  list(P = P, names = class_names, communicating = communicating)
 }
 
 #' Identify a Recurrent Class
@@ -307,7 +327,9 @@ is_com_class <- function(P, c) {
 #' @param P A `StochMat` object.
 #' @param c A non-empty character or integer vector containing state names.
 #'
-#' @return `TRUE` if no transitions lead outside the class; otherwise `FALSE`.
+#' @return `TRUE` for a closed communicating class and `FALSE` for a transient
+#'   communicating class. An error is raised if `c` does not identify a
+#'   communicating class.
 #'
 #' @examples
 #' P <- StochMat(matrix(c(0.5, 0.5, 0,
@@ -320,15 +342,19 @@ is_com_class <- function(P, c) {
 #'
 #' @export
 is_rec_class <- function(P, c) {
+  is_recurrent_class_checked(check_state_class(P, c))
+}
 
-  # Input Validation
-  if (!is_com_class(P, c)) {
+is_recurrent_class_checked <- function(state_class) {
+  if (!state_class$communicating) {
     stop("`c` must identify a communicating class.", call. = FALSE)
   }
-  class_names <- as.character(c)
-  state_names <- get_state_names(P)
+  is_closed_class(state_class$P, state_class$names)
+}
 
-  outside <- setdiff(state_names, class_names)
+# Check a known communicating class for transitions to outside states.
+is_closed_class <- function(P, class_names) {
+  outside <- setdiff(get_state_names(P), class_names)
   if (length(outside) == 0L) {
     return(TRUE)
   }
@@ -345,9 +371,16 @@ is_rec_class <- function(P, c) {
 #' @param c A non-empty character or integer vector containing the state names
 #'   in a recurrent class.
 #'
+#' @details
+#' The stationary probabilities within the class are computed with the
+#' Grassmann, Taksar and Heyman (1985) algorithm, using off-diagonal
+#' transition probabilities.
+#'
 #' @return
 #' A `StochVec` containing the stationary probabilities. States outside the
 #' recurrent class have probability zero.
+#'
+#' @inherit stat references
 #'
 #' @importFrom stats setNames
 #'
@@ -362,34 +395,21 @@ is_rec_class <- function(P, c) {
 #'
 #' @export
 stat_on_class <- function(P, c) {
-
-  # Input Validation
-  if (!is_rec_class(P, c)) {
+  state_class <- check_state_class(P, c)
+  if (!is_recurrent_class_checked(state_class)) {
     stop("`c` must identify a recurrent class.", call. = FALSE)
   }
-  class_names <- as.character(c)
+  stat_on_closed_class(state_class$P, state_class$names)
+}
+
+stat_on_closed_class <- function(P, class_names) {
   state_names <- get_state_names(P)
-
-  # Restrict the transition matrix to the class
   Pc <- P[class_names, class_names, drop = FALSE]
-  m <- length(class_names)
-
-  # Solve (pi ^ T)(I - P) = 0 with sum(pi) = 1
-  A <- rbind(t(Pc) - diag(m), rep(1, m))
-  b <- c(rep(0, m), 1)
-
-  # Compute the stationary distribution
-  pic <- as.numeric(qr.solve(A, b, tol = 1e-7))
-  if (any(!is.finite(pic)) ||
-      any(pic < -sqrt(.Machine$double.eps)) ||
-      abs(sum(pic) - 1) > sqrt(.Machine$double.eps)) {
-    stop(
-      "Could not compute a valid stationary distribution.",
-      call. = FALSE
-    )
+  pic <- gth_stationary(Pc)
+  if (max(abs(as.numeric(pic %*% Pc) - pic)) >
+      sqrt(.Machine$double.eps)) {
+    stop("Could not compute a valid stationary distribution.", call. = FALSE)
   }
-
-  pic <- pic / sum(pic)
 
   # Embed in full state space
   pi_full <- setNames(
@@ -398,7 +418,47 @@ stat_on_class <- function(P, c) {
   )
   pi_full[class_names] <- pic
   StochVec(pi_full)
+}
 
+# Grassmann, Taksar and Heyman (1985), doi:10.1287/opre.33.5.1107.
+# P is the transition matrix of one closed communicating class.
+gth_stationary <- function(P) {
+  n <- nrow(P)
+  remaining <- seq_len(n)
+  eliminated <- integer(n - 1L)
+  diag(P) <- 0
+
+  for (step in seq_along(eliminated)) {
+    exit_rates <- rowSums(P[remaining, remaining, drop = FALSE])
+    # The largest exit rate keeps every elimination multiplier at most one.
+    pivot <- which.max(exit_rates)
+    state <- remaining[pivot]
+    exit_rate <- exit_rates[pivot]
+    if (!is.finite(exit_rate) || exit_rate <= 0) {
+      stop("Could not compute a valid stationary distribution.", call. = FALSE)
+    }
+    eliminated[step] <- state
+    remaining <- remaining[-pivot]
+
+    incoming <- P[remaining, state] / exit_rate
+    reduced <- P[remaining, remaining, drop = FALSE] +
+      outer(incoming, P[state, remaining])
+    diag(reduced) <- 0
+    P[remaining, remaining] <- reduced
+    P[remaining, state] <- incoming
+  }
+
+  # Restore the eliminated states in reverse order. Rescale at each step
+  # so the weights stay bounded even when stationary probabilities vary widely.
+  probabilities <- numeric(n)
+  probabilities[remaining] <- 1
+  for (state in rev(eliminated)) {
+    weight <- sum(probabilities[remaining] * P[remaining, state])
+    probabilities[remaining] <- probabilities[remaining] / (1 + weight)
+    probabilities[state] <- weight / (1 + weight)
+    remaining <- c(remaining, state)
+  }
+  probabilities
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -410,8 +470,8 @@ stat_on_class <- function(P, c) {
 #' @description
 #' Determines whether all states of a finite Markov chain communicate.
 #'
-#' @param x A `MarkovChain` or `StochMat` object.
-#' @param ... Additional arguments passed to methods.
+#' @param x A valid `MarkovChain` or `StochMat` object.
+#' @param ... Additional arguments passed to methods. Currently unused.
 #'
 #' @return A single logical value: `TRUE` if the chain is irreducible and
 #'   `FALSE` otherwise.
@@ -424,13 +484,13 @@ is_irreducible <- function(x, ...) {
 #' @rdname is_irreducible
 #' @export
 is_irreducible.MarkovChain <- function(x, ...) {
-  is_irreducible(x$P, ...)
+  length(mc_classes.MarkovChain(x, ...)) == 1L
 }
 
 #' @rdname is_irreducible
 #' @export
 is_irreducible.StochMat <- function(x, ...) {
-  length(mc_classes(x)) == 1L
+  length(mc_classes.StochMat(x, ...)) == 1L
 }
 
 #' @rdname is_irreducible
@@ -543,12 +603,13 @@ Ppower.matrix <- function(x, k, ...) {
 #' Computes successive powers of a transition matrix by repeated matrix
 #' multiplication.
 #'
-#' @param P A square numeric transition matrix.
-#' @param k A positive integer giving the highest matrix power to compute.
+#' @param P A nonempty square numeric matrix with finite entries.
+#' @param k A single positive integer giving the highest matrix power to compute.
 #'
 #' @return
 #' A list of `k + 1` matrices. Element `j + 1` contains \eqn{P^j}, beginning
-#' with the identity matrix \eqn{P^0}.
+#' with the identity matrix \eqn{P^0}. The matrices preserve the row and
+#' column names of `P`.
 #'
 #' @details
 #' Unlike [Ppower()], this function does not use an eigendecomposition.
@@ -574,10 +635,21 @@ Ppower.matrix <- function(x, k, ...) {
 #'
 #' @export
 Ppowers <- function(P, k) {
-  Pj <- vector("list", k)
+  if (!is.matrix(P) || !is.numeric(P) || nrow(P) != ncol(P) ||
+      nrow(P) == 0L || any(!is.finite(P))) {
+    stop("`P` must be a nonempty square numeric matrix with finite entries.",
+         call. = FALSE)
+  }
+  if (length(k) != 1L || !is.null(dim(k)) || !is_positive_integer(k)) {
+    stop("`k` must be a single positive integer.", call. = FALSE)
+  }
+
+  n_powers <- k + 1
+  Pj <- vector("list", n_powers)
   s <- nrow(P)
   Pj[[1L]] <- diag(1, s)              # P ^ 0
-  for (j in 2L:(k + 1)) {
+  dimnames(Pj[[1L]]) <- dimnames(P)
+  for (j in seq.int(2L, n_powers)) {
     Pj[[j]] <- Pj[[j - 1L]] %*% P   # P ^ (j - 1)
   }
   Pj

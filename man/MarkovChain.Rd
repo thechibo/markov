@@ -31,17 +31,31 @@ MarkovChainList(x)
 \method{[}{MarkovChainList}(x, i)
 }
 \arguments{
-\item{a}{Numeric, initial law.}
+\item{a}{Numeric vector of initial state probabilities, one per row of \code{P}.}
 
-\item{P}{Numeric matrix, transition probabilities (square row‐stochastic).}
+\item{P}{Square numeric row-stochastic matrix of transition probabilities.
+See \code{\link[=set_state_names]{set_state_names()}} for the default names assigned during construction.}
 
-\item{x}{For \code{MarkovChainList()}, a list of \code{MarkovChain} objects.}
+\item{x}{An object to check with \code{is.MarkovChain()}, a \code{MarkovChain} to
+validate or print, a list of valid chains to construct a \code{MarkovChainList},
+or a \code{MarkovChainList} to subset.}
+
+\item{digits}{Number of significant digits used to round displayed values.
+Defaults to \code{getOption("digits")}.}
+
+\item{...}{Additional arguments passed to \code{\link[base:print]{base::print()}} for the initial
+distribution and transition matrix.}
+
+\item{i}{A numeric, character, or logical index for list subsetting. If
+omitted, all elements are selected.}
 }
 \value{
-A list with class \code{"MarkovChain"} and elements \code{a} and \code{P}. Errors on
-validation failure.
+\code{MarkovChain()} returns a list of class \code{"MarkovChain"} with elements \code{a} and
+\code{P}. \code{is.MarkovChain()} returns a single logical value. The print method
+invisibly returns the validated chain.
 
-For \code{MarkovChainList()}, an object of class \code{"MarkovChainList"}.
+\code{MarkovChainList()} and its subsetting method return an object of
+class \code{"MarkovChainList"}.
 }
 \description{
 Construct and validate a finite‐state, discrete‐time Markov chain, represented
@@ -65,6 +79,9 @@ A valid \code{MarkovChain} must satisfy:
 \item has exactly two elements named \code{"a"} and \code{"P"}
 \item \code{a} validates as \code{StochVec}
 \item \code{P} validates as \code{StochMat}
+\item \code{length(a)} equals \code{nrow(P)}
+\item the names of \code{a} and the row and column names of \code{P} are identical,
+in the same order
 }
 }
 
@@ -72,6 +89,8 @@ A valid \code{MarkovChain} must satisfy:
 
 \code{MarkovChainList()} constructs a container of multiple \code{MarkovChain} objects.
 All elements must be of class \code{"MarkovChain"}. Subsetting preserves the class.
+Subsets containing invalid elements, including \code{NULL} from \code{NA} or
+out-of-range indices, are rejected. Empty subsets are allowed.
 }
 
 \examples{

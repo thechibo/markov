@@ -181,6 +181,30 @@ test_that("mc_classes() dispatches on MarkovChain objects", {
   expect_identical(mc_classes(x), mc_classes(P))
 })
 
+test_that("graph methods validate transition matrices and Markov chains", {
+  P <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), 2, byrow = TRUE))
+  chain <- MarkovChain(c(0.6, 0.4), P)
+  chain$a <- NULL
+  P[1L, 1L] <- 0.5
+
+  for (graph_method in list(mc_classes, is_irreducible)) {
+    expect_error(graph_method(chain), "exactly two elements")
+    expect_error(graph_method(P), "Row values must sum to 1")
+  }
+})
+
+test_that("Ppowers() validates inputs and preserves state names", {
+  P <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), 2, byrow = TRUE,
+                       dimnames = list(c("a", "b"), c("a", "b"))))
+  powers <- Ppowers(P, 2L)
+
+  expect_length(powers, 3L)
+  expect_identical(dimnames(powers[[1L]]), dimnames(P))
+  expect_equal(powers[[3L]], P %*% P)
+  expect_error(Ppowers(matrix(1:6, 2L), 2L), "square numeric matrix")
+  expect_error(Ppowers(P, 2.5), "single positive integer")
+})
+
 test_that("is_com_class() identifies communicating classes", {
   P <- make_closed_classes_matrix()
   expect_true(is_com_class(P, c("a", "b")))
@@ -225,6 +249,15 @@ test_that("is_rec_class() requires a complete communicating class", {
                "`c` must identify a communicating class", fixed = TRUE)
   expect_error(is_rec_class(P, c("a", "c")),
                "`c` must identify a communicating class", fixed = TRUE)
+})
+
+test_that("class helpers use the state names assigned during validation", {
+  P <- new_StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), 2, byrow = TRUE))
+  states <- c("1", "2")
+
+  expect_true(is_com_class(P, states))
+  expect_true(is_rec_class(P, states))
+  expect_equal(stat_on_class(P, states), stat(StochMat(P)))
 })
 
 test_that("stat_on_class() computes and embeds a stationary distribution", {

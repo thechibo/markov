@@ -125,6 +125,15 @@ test_that("sim() produces only valid states", {
   expect_true(all(as.character(observed) %in% c("A", "B")))
 })
 
+test_that("sim() uses corrected probabilities for tolerated negative roundoff", {
+  chain <- MarkovChain(c(1, 0), matrix(c(0, 1, 1, 0), 2, byrow = TRUE))
+  chain$P[1, ] <- c(-1e-17, 1)
+  observed <- sim(4, chain)
+  expect_identical(observed, ordered(c("1", "2", "1", "2"),
+                                     levels = c("1", "2")))
+  expect_identical(as.numeric(chain$P[1, ]), c(-1e-17, 1))
+})
+
 test_that("sim() rejects objects that are not Markov chains", {
   expect_error(sim(5, list(a = 1, P = matrix(1))))
   expect_error(sim(5, NULL))
@@ -138,9 +147,12 @@ test_that("sim() requires m to be a positive integer", {
                          byrow = TRUE,
                          dimnames = list(c("A", "B"), c("A", "B"))
                        ))
-  invalid_m <- list(0, -1, 1.5, NA_real_, Inf, "5", TRUE, numeric())
+  invalid_m <- list(
+    0, -1, 1.5, NA_real_, Inf, "5", TRUE, numeric(), c(2, 3), matrix(2)
+  )
   for (value in invalid_m) {
     expect_error(sim(value, chain),
+                 "`m` must be a single positive integer",
                  info = paste("`m` should be rejected:",
                               paste(value, collapse = ", ")))
   }

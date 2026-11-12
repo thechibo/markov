@@ -16,9 +16,9 @@ is_irreducible(x, ...)
 \method{is_irreducible}{default}(x, ...)
 }
 \arguments{
-\item{x}{A \code{MarkovChain} or \code{StochMat} object.}
+\item{x}{A valid \code{MarkovChain} or \code{StochMat} object.}
 
-\item{...}{Additional arguments passed to methods.}
+\item{...}{Additional arguments passed to methods. Currently unused.}
 }
 \value{
 A single logical value: \code{TRUE} if the chain is irreducible and

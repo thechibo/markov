@@ -19,24 +19,38 @@ is.StochVec(x)
 \method{print}{StochVec}(x, digits = getOption("digits"), ...)
 }
 \arguments{
-\item{...}{Numeric values coerceable to a flat numeric vector.}
+\item{...}{For the constructors, numeric values combined into a flat vector.
+For the print method, additional arguments passed to \code{\link[base:print]{base::print()}}.}
+
+\item{x}{An object to check with \code{is.StochVec()}, or a \code{StochVec} to validate
+or print.}
+
+\item{tol}{Nonnegative numeric tolerance for the absolute difference between
+the sum and one. The validator defaults to \code{1e-12}.}
+
+\item{digits}{Number of significant digits used to round displayed values.
+Defaults to \code{getOption("digits")}.}
 }
 \value{
-A \code{numeric} vector with additional class \code{"StochVec"}. If validation fails,
-an error is thrown.
+The constructors and validator return a numeric vector of class
+\code{"StochVec"}. \code{is.StochVec()} returns a single logical value. The print method
+invisibly returns the validated vector.
 }
 \description{
-Construct and validate a stochastic vector: a numeric vector whose components
-are strictly non-missing, strictly positive, and sum to exactly 1. The
-returned object has S3 class \code{"StochVec"} and underlying storage \code{"numeric"}.
+Construct and validate a stochastic vector of finite, nonnegative
+probabilities. The returned object has S3 class \code{"StochVec"}.
+}
+\details{
+If the sum differs from one by at most \code{1e-12}, \code{StochVec()} divides
+every entry by that sum without a warning. A larger deviation is an error.
 }
 \section{Validation}{
 
 A valid \code{StochVec} must satisfy all of:
 \itemize{
-\item no \code{NA}s
-\item all entries are \verb{> 0}
-\item \code{sum(x) == 1}
+\item all entries are finite and nonnegative
+\item the sum is within \code{1e-12} of one
+\item state names are unique, non-missing, and non-empty
 }
 }
 

@@ -20,6 +20,11 @@ recurrent class have probability zero.
 Computes the stationary distribution associated with a recurrent
 communicating class and embeds it in the full state space.
 }
+\details{
+The stationary probabilities within the class are computed with the
+Grassmann, Taksar and Heyman (1985) algorithm, using off-diagonal
+transition probabilities.
+}
 \examples{
 P <- StochMat(matrix(c(0.8, 0.2, 0,
                        0.3, 0.7, 0,
@@ -29,4 +34,10 @@ P <- StochMat(matrix(c(0.8, 0.2, 0,
 stat_on_class(P, c(1L, 2L))
 stat_on_class(P, 3L)
 
+}
+\references{
+Grassmann, W. K., Taksar, M. I., and Heyman, D. P. (1985).
+Regenerative Analysis and Steady State Distributions for Markov Chains.
+\emph{Operations Research}, 33(5), 1107--1116.
+\doi{10.1287/opre.33.5.1107}
 }

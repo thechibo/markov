@@ -26,7 +26,10 @@
 sim <- function(m, x) {
 
   # Preliminaries
-  m <- as_positive_integer(m)
+  if (length(m) != 1L || !is.null(dim(m)) || !is_positive_integer(m)) {
+    stop("`m` must be a single positive integer.", call. = FALSE)
+  }
+  m <- as.integer(m)
   x <- validate_MarkovChain(x)
   st_names <- get_state_names(x)
   idx <- integer(m)

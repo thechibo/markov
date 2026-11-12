@@ -13,6 +13,7 @@ is_com_class(P, c)
 }
 \value{
 \code{TRUE} if \code{c} identifies a communicating class; otherwise \code{FALSE}.
+Invalid state names raise an error.
 }
 \description{
 Checks whether a set of state names forms a communicating class.

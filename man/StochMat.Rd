@@ -19,29 +19,47 @@ is.StochMat(x)
 \method{print}{StochMat}(x, digits = getOption("digits"), ...)
 }
 \arguments{
-\item{x}{For \code{new_StochMat()}, a matrix or something coercible to one.}
+\item{x}{For \code{new_StochMat()}, a matrix or data for \code{\link[base:matrix]{base::matrix()}}. For
+\code{is.StochMat()}, the object to check. For validation or printing, a \code{StochMat}.}
 
-\item{...}{Objects coercible to a matrix. Passed to \code{matrix()} when needed.}
+\item{...}{For the constructors, data and arguments for \code{\link[base:matrix]{base::matrix()}}
+when the input is supplied as data rather than as a matrix. For the print
+method, additional arguments passed to \code{\link[base:print]{base::print()}}.}
+
+\item{tol}{Nonnegative numeric tolerance for the absolute difference between
+each row sum and one after clipping. The validator defaults to \code{1e-12}.}
+
+\item{digits}{Number of significant digits used to round displayed values.
+Defaults to \code{getOption("digits")}.}
 }
 \value{
-A matrix with additional class \code{"StochMat"}. If validation fails,
-an error is thrown.
+The constructors and validator return a matrix of class \code{"StochMat"}.
+\code{is.StochMat()} returns a single logical value. The print method invisibly
+returns the validated matrix.
 }
 \description{
-Construct and validate a stochastic matrix: a square numeric matrix whose
-entries are strictly non-missing, strictly positive, and each row sums to
-exactly 1. The returned object has S3 class \code{"StochMat"} and underlying
-storage \code{"matrix"}.
+Construct and validate a square matrix of finite, nonnegative transition
+probabilities. The returned object has S3 class \code{"StochMat"}.
+}
+\details{
+Input entries below \code{-1e-16} are rejected. Entries in \verb{[-1e-16, 0)}
+are set to zero. After clipping, each row sum must differ from one by at most
+\code{1e-12}. A larger deviation is an error. Each accepted row is divided by
+its sum. \code{StochMat()} warns only if it clips negative entries.
 }
 \section{Validation}{
 
 A valid \code{StochMat} must satisfy all of:
 \itemize{
 \item is a square matrix (\code{nrow(x) == ncol(x)})
-\item no \code{NA}s
-\item all entries are \verb{> 0}
-\item \code{rowSums(x) == 1} for every row
+\item has at least one state
+\item all entries are finite and nonnegative
+\item every row sum is within \code{1e-12} of one
+\item state names are unique, non-missing, and non-empty
 }
+
+Assign the returned object to retain corrections. \code{is.StochMat()} only
+checks validity.
 }
 
 \examples{

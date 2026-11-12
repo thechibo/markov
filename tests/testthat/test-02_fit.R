@@ -7,18 +7,22 @@ test_that("fit() rejects invalid observation sequences", {
     fit(c("a", NA_character_)),
     "contains NA values"
   )
+  for (x in list(matrix(1:4, nrow = 2), array(1:4, 4), list("a", "b"))) {
+    expect_error(fit(x), "must be an atomic vector")
+  }
+  for (x in list(c("a", ""), factor(c("", "a")))) {
+    expect_error(fit(x), "State labels in `x` must be .*non-empty")
+  }
 })
 
 test_that("fit() requires exactly one valid init value", {
-  expect_error(
-    fit(c("a", "b"), init = "invalid")
+  invalid <- list(
+    "invalid", "r", NULL, NA_character_, c("realized", "uniform"),
+    c("realized", "uniform", "stationary")
   )
-  expect_error(
-    fit(
-      c("a", "b"),
-      init = c("realized", "uniform")
-    )
-  )
+  for (init in invalid) {
+    expect_error(fit(c("a", "b"), init = init), "`init` must be one of")
+  }
 })
 
 test_that("fit() estimates numeric transitions and sorts states", {
@@ -31,6 +35,24 @@ test_that("fit() estimates numeric transitions and sorts states", {
   expect_equal(observed, expected, tolerance = 1e-12)
 })
 
+
+test_that("fit() distinguishes numeric states with colliding printed labels", {
+  for (states in list(c(1, 1 + 1e-15), c(1e10, 1e10 + 1e-5))) {
+    x <- states[c(2, 1, 2, 1)]
+    for (init in c("realized", "uniform", "stationary")) {
+      observed <- fit(x, init = init)
+      expect_equal(as.numeric(rownames(observed$P)), states, tolerance = 0)
+      expect_identical(anyDuplicated(rownames(observed$P)), 0L)
+      expect_identical(names(observed$a), rownames(observed$P))
+      expect_equal(unname(unclass(observed$P)), matrix(c(0, 1, 1, 0), 2))
+      expected_a <- if (init == "realized") c(0, 1) else c(0.5, 0.5)
+      expect_equal(as.numeric(observed$a), expected_a)
+    }
+    expect_warning(terminal <- fit(states[c(1, 1, 2)]), "absorbing states")
+    expect_equal(unname(unclass(terminal$P)),
+                 matrix(c(0.5, 0.5, 0, 1), 2, byrow = TRUE))
+  }
+})
 
 test_that("fit() preserves first-appearance order for character states", {
   x <- c("b", "a", "b", "a")
@@ -73,6 +95,28 @@ test_that("fit() treats states with no outgoing observations as absorbing", {
 
   expect_warning(observed <- fit(x), "absorbing states: b")
   expect_equal(observed, expected, tolerance = 1e-12)
+})
+
+test_that("fit() makes terminal-only numeric states absorbing by position", {
+  for (terminal in c(20, 0, -5, 0.5)) {
+    labels <- as.character(c(10, terminal))
+    expected_P <- matrix(c(0.5, 0.5, 0, 1), nrow = 2, byrow = TRUE,
+                         dimnames = list(labels, labels))
+    expected_a <- setNames(c(1, 0), labels)
+    state_order <- order(c(10, terminal))
+    expected <- MarkovChain(
+      a = expected_a[state_order],
+      P = expected_P[state_order, state_order]
+    )
+
+    expect_warning(
+      observed <- fit(c(10, 10, terminal)),
+      paste("absorbing states:", terminal),
+      fixed = TRUE
+    )
+    expect_equal(observed, expected, tolerance = 1e-12,
+                 info = paste("Terminal state:", terminal))
+  }
 })
 
 test_that("fit() estimates correctly the stationary distribution", {

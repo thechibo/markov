@@ -7,13 +7,14 @@
 Ppowers(P, k)
 }
 \arguments{
-\item{P}{A square numeric transition matrix.}
+\item{P}{A nonempty square numeric matrix with finite entries.}
 
-\item{k}{A positive integer giving the highest matrix power to compute.}
+\item{k}{A single positive integer giving the highest matrix power to compute.}
 }
 \value{
 A list of \code{k + 1} matrices. Element \code{j + 1} contains \eqn{P^j}, beginning
-with the identity matrix \eqn{P^0}.
+with the identity matrix \eqn{P^0}. The matrices preserve the row and
+column names of \code{P}.
 }
 \description{
 Computes successive powers of a transition matrix by repeated matrix

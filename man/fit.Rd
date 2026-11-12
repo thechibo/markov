@@ -4,11 +4,12 @@
 \alias{fit}
 \title{Estimate a Markov chain from an observed state sequence}
 \usage{
-fit(x, init = c("realized", "uniform", "stationary"))
+fit(x, init = "realized")
 }
 \arguments{
-\item{x}{A vector of observed states in time order. Can be numeric, character,
-factor, or ordered. Must have length at least 2 and contain no \code{NA}s.}
+\item{x}{An atomic vector or factor of observed states in time order.
+Must have no dimensions, have length at least 2, and contain no \code{NA}s.
+State labels must be non-empty.}
 
 \item{init}{Initial distribution to attach to the fitted Markov chain.
 Must be exactly one of:
@@ -28,6 +29,8 @@ sequence of states.
 \details{
 The state space is defined as \code{unique(x)}. If \code{x} is numeric or ordered, the
 states are sorted; otherwise, the first-appearance order is used.
+Numeric state labels use additional precision when needed to distinguish
+values with identical default character representations.
 
 The function computes the empirical transition frequencies and normalizes by
 row to obtain a transition probability matrix.
@@ -37,8 +40,7 @@ If a state never appears as an origin (i.e., it is never observed at times
 In that case the function treats that state as absorbing (probability 1 on the
 diagonal) and emits a warning.
 
-A numerical cleanup step will rescale rows if their sums deviate from 1 by
-by more than 1e-12 (tolerance), emitting a warning.
+The row-normalized transition matrix is validated by \code{\link[=StochMat]{StochMat()}}.
 }
 \examples{
 # Choose the transition probability matrix and the initial law of the MC

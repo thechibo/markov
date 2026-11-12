@@ -60,6 +60,8 @@ For a \code{StochMat}, missing row or column names are assigned as
 the row and column names must be identical. An error is raised when they
 differ.
 
+State names must be unique, non-missing, and non-empty.
+
 For a \code{MarkovChain}, \code{get_state_names()} retrieves the row names of its
 transition matrix.
 }

@@ -12,7 +12,9 @@ is_rec_class(P, c)
 \item{c}{A non-empty character or integer vector containing state names.}
 }
 \value{
-\code{TRUE} if no transitions lead outside the class; otherwise \code{FALSE}.
+\code{TRUE} for a closed communicating class and \code{FALSE} for a transient
+communicating class. An error is raised if \code{c} does not identify a
+communicating class.
 }
 \description{
 Checks whether a set of states forms a recurrent class.

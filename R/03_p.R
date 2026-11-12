@@ -40,8 +40,11 @@
 #'
 #' @keywords internal
 lambda_block <- function(p) {
-  p <- as.numeric(p)
-  diag(p) - tcrossprod(p) # Lambda_i = diag(p) - p p^T
+  block <- -tcrossprod(as.numeric(p))
+  diag(block) <- 0
+  # The diagonal is p[j] times the total probability of the other states.
+  diag(block) <- -rowSums(block)
+  block
 }
 
 #' @title Asymptotic Variance–Covariance of the Transition Probability Vector
@@ -108,15 +111,22 @@ lambda_block <- function(p) {
 #' where \eqn{s} is the number of states.
 #'
 #' @references
-#' GSI - Theorem 1
+#' Gavrilopoulos, G., Trevezas, S., and Votsi, I. (2026).
+#' \emph{Matrix asymptotic calculus for plug-in maximum likelihood estimators in finite Markov chains}.
+#' arXiv preprint arXiv:2607.17161. \url{https://arxiv.org/abs/2607.17161}.
+#' See Theorem 1 for the row-wise transition covariance.
 #'
-#' A. Sadek and N. Limnios (2002).
-#' \emph{Asymptotic properties of estimators for nonhomogeneous Markov chains}.
-#' Statistics & Probability Letters, 60(4), 1839–1850.
+#' Sadek, A., and Limnios, N. (2002).
+#' \emph{Asymptotic properties for maximum likelihood estimators for reliability and failure rates of Markov chains}.
+#' Communications in Statistics - Theory and Methods, 31(10), 1837--1861.
+#' \doi{10.1081/STA-120014916}.
 #' See Proposition 1 (p. 1846) for the asymptotic covariance matrix of the
 #' transition probabilities.
 #'
-#' @inherit MarkovChain examples
+#' @examples
+#' P <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE))
+#' Sigma <- vcov_p(P)
+#' dim(Sigma) # Four transition probabilities in row-wise order
 #'
 #' @importFrom Matrix bdiag
 #' @export
@@ -127,22 +137,19 @@ vcov_p <- function(x, ...) {
 #' @rdname vcov_p
 #' @export
 vcov_p.MarkovChain <- function(x, ...) {
-  vcov_p(x$P, ...)
+  x <- validate_MarkovChain(x)
+  method <- validated_stochmat_method(x$P, vcov_p_validated, vcov_p)
+  method(x$P, ...)
 }
 
 #' @rdname vcov_p
 #' @export
 vcov_p.StochMat <- function(x, ...) {
-  if (!is_irreducible(x)) {
-    stop("The Markov Chain must be irreducible.")
-  }
-  stat <- stat(x)
+  vcov_p_validated(validate_StochMat(x), ...)
+}
 
-  blocks <- lapply(seq_len(nstates(x)), function(i) {
-    lambda_block(x[i, ]) / stat[i]
-  })
-
-  as.matrix(Matrix::bdiag(blocks))
+vcov_p_validated <- function(x, ...) {
+  as.matrix(transition_covariance_sparse(x))
 }
 
 
@@ -153,4 +160,18 @@ vcov_p.default <- function(x, ...) {
     "`x` must be a `MarkovChain` or `StochMat` object.",
     call. = FALSE
   )
+}
+
+stationary_for_covariance <- function(x) {
+  if (length(mc_classes_validated(x)) != 1L) {
+    stop("The Markov Chain must be irreducible.", call. = FALSE)
+  }
+  stat_on_closed_class(x, get_state_names(x))
+}
+
+transition_covariance_sparse <- function(x, stationary = stationary_for_covariance(x)) {
+  blocks <- lapply(seq_len(nstates(x)), function(i) {
+    lambda_block(x[i, ]) / stationary[i]
+  })
+  Matrix::bdiag(blocks)
 }

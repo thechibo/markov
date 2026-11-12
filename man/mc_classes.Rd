@@ -13,9 +13,9 @@ mc_classes(x, ...)
 \method{mc_classes}{StochMat}(x, ...)
 }
 \arguments{
-\item{x}{A \code{MarkovChain} or \code{StochMat} object.}
+\item{x}{A valid \code{MarkovChain} or \code{StochMat} object.}
 
-\item{...}{Additional arguments passed to methods.}
+\item{...}{Additional arguments passed to methods. Currently unused.}
 }
 \value{
 A list of character vectors containing the state names in each
