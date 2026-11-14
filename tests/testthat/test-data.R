@@ -1,0 +1,11 @@
+test_that("opaque2 is a complete nucleotide sequence usable by fit", {
+  expect_type(opaque2, "character")
+  expect_length(opaque2, 3158L)
+  expect_false(anyNA(opaque2))
+  expect_equal(sort(unique(opaque2)), c("A", "C", "G", "T"))
+  expect_equal(as.integer(table(opaque2)), c(798L, 755L, 765L, 840L))
+  expect_equal(sort(rownames(fit(opaque2)$P)), c("A", "C", "G", "T"))
+  loaded <- new.env(parent = emptyenv())
+  utils::data("opaque2", package = "markov", envir = loaded)
+  expect_identical(loaded$opaque2, opaque2)
+})

@@ -1,6 +1,6 @@
 Package: markov
-Title: Hidden Markov Models Inference
-Version: 0.2.0
+Title: Discrete Time Markov Chains
+Version: 0.3.0
 Authors@R: c(
     person("Irene", "Votsi", , "Eirini.Votsi@univ-lorraine.fr ", role = "aut",
            comment = c(ORCID = "0000-0002-7397-2025")),
@@ -9,7 +9,7 @@ Authors@R: c(
     person("Ioannis", "Oikonomidis", , "goikon@math.uoa.gr", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-8130-2104"))
   )
-Description: This package performs statistical inference on HMM along with
+Description: This package performs statistical inference on Markov Chains along with
     reliability indicators.
 License: GPL (>= 3)
 URL: https://thechibo.github.io/markov/
