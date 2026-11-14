@@ -1,6 +1,6 @@
-# markov: Hidden Markov Models Inference
+# markov: Discrete Time Markov Chains
 
-This package performs statistical inference on HMM along with
+This package performs statistical inference on Markov Chains along with
 reliability indicators.
 
 ## See also

@@ -6,12 +6,13 @@
 - [`Ppower()`](Ppower.md) : Power of a Transition Matrix
 - [`Ppowers()`](Ppowers.md) : Successive Powers of a Transition Matrix
 - [`avail()`](avail.md) : Availability of a Markov Chain
-- [`bmp()`](bmp.md) : BMP Failure Rate of a Markov Chain
+- [`bmpf()`](bmpf.md) : BMP Failure Rate of a Markov Chain
 - [`cp()`](cp.md) : Matrix Transformed Cross-Product
 - [`cron()`](cron.md) : Kronecker Delta Vector
 - [`dssc()`](dssc.md) : Down-State Survival Curve of a Markov Chain
 - [`dti()`](dti.md) : Discrete-Time Intensity of Hitting Down
-- [`estim_parallel()`](estim_parallel.md) : Parallel Estimation
+- [`estim_parallel()`](estim_parallel.md) : Simulate and Estimate Markov
+  Chain Functionals
 - [`fit()`](fit.md) : Estimate a Markov Chain from One or More
   Trajectories
 - [`ftp()`](ftp.md) : Failure-Time Probability of a Markov Chain
@@ -30,9 +31,9 @@
   [`as_positive_integer()`](positive_integer.md) : Validate or Coerce
   Positive Integer Values
 - [`rel()`](rel.md) : Reliability of a Markov Chain
-- [`rg()`](rg.md) : RG Failure Rate of a Markov Chain
+- [`rgf()`](rgf.md) : RG Failure Rate of a Markov Chain
 - [`savail()`](savail.md) : Stationary Availability of a Markov Chain
-- [`sim()`](sim.md) : Simulate a Markov Chain Trajectory
+- [`sim()`](sim.md) : Simulate Markov Chain Trajectories
 - [`stat()`](stat.md) : Stationary Distribution of a Markov Chain
 - [`stat_on_class()`](stat_on_class.md) : Stationary Distribution on a
   Recurrent Class

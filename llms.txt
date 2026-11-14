@@ -2,11 +2,16 @@
 
 ## Introduction
 
-The `markov` R package develops…
+The `markov` R package provides tools for statistical inference on
+finite, discrete-time Markov chains and the analysis of system
+reliability.
 
 ### Key Features
 
-The package’s key features are…
+- Simulation and estimation of Markov chains.
+- Transition probabilities and stationary distributions.
+- Reliability, availability, and maintainability measures.
+- Hypothesis testing and uncertainty estimation.
 
 ## Installation
 
@@ -39,15 +44,15 @@ in the package vignette
 
 The `markov` package is developed and maintained by:
 
-- [Ioannis
-  Oikonomidis](http://users.uoa.gr/~goikon/ "Ioannis Oikonomidis Homepage") -
-  Department of Mathematics, National and Kapodistrian University of
-  Athens
 - [Irene
   Votsi](https://votsiire.jimdofree.com/ "Irene Votsi Homepage") - LIEC,
   CNRS, Université de Lorraine
 - [Samis
   Trevezas](http://scholar.uoa.gr/strevezas/ "Samis Trevezas Homepage") -
+  Department of Mathematics, National and Kapodistrian University of
+  Athens
+- [Ioannis
+  Oikonomidis](http://users.uoa.gr/~goikon/ "Ioannis Oikonomidis Homepage") -
   Department of Mathematics, National and Kapodistrian University of
   Athens
 
@@ -59,12 +64,13 @@ The `markov` package is developed and maintained by:
 - [`Ppower()`](Ppower.md) : Power of a Transition Matrix
 - [`Ppowers()`](Ppowers.md) : Successive Powers of a Transition Matrix
 - [`avail()`](avail.md) : Availability of a Markov Chain
-- [`bmp()`](bmp.md) : BMP Failure Rate of a Markov Chain
+- [`bmpf()`](bmpf.md) : BMP Failure Rate of a Markov Chain
 - [`cp()`](cp.md) : Matrix Transformed Cross-Product
 - [`cron()`](cron.md) : Kronecker Delta Vector
 - [`dssc()`](dssc.md) : Down-State Survival Curve of a Markov Chain
 - [`dti()`](dti.md) : Discrete-Time Intensity of Hitting Down
-- [`estim_parallel()`](estim_parallel.md) : Parallel Estimation
+- [`estim_parallel()`](estim_parallel.md) : Simulate and Estimate Markov
+  Chain Functionals
 - [`fit()`](fit.md) : Estimate a Markov Chain from One or More
   Trajectories
 - [`ftp()`](ftp.md) : Failure-Time Probability of a Markov Chain
@@ -83,9 +89,9 @@ The `markov` package is developed and maintained by:
   [`as_positive_integer()`](positive_integer.md) : Validate or Coerce
   Positive Integer Values
 - [`rel()`](rel.md) : Reliability of a Markov Chain
-- [`rg()`](rg.md) : RG Failure Rate of a Markov Chain
+- [`rgf()`](rgf.md) : RG Failure Rate of a Markov Chain
 - [`savail()`](savail.md) : Stationary Availability of a Markov Chain
-- [`sim()`](sim.md) : Simulate a Markov Chain Trajectory
+- [`sim()`](sim.md) : Simulate Markov Chain Trajectories
 - [`stat()`](stat.md) : Stationary Distribution of a Markov Chain
 - [`stat_on_class()`](stat_on_class.md) : Stationary Distribution on a
   Recurrent Class

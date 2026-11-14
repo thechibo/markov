@@ -1,74 +1,71 @@
-# Parallel Estimation
+# Simulate and Estimate Markov Chain Functionals
 
-Simulate `k` trajectories of length `m` and apply `fun`.
+Simulate independent trajectories, fit a Markov chain to each
+trajectory, and apply a function to each fit.
 
 ## Usage
 
 ``` r
-estim_parallel(x, fun, k = 1000, m = 500, ...)
+estim_parallel(x, fun, k = 1000, m = 500, ..., n_workers = 2L)
 ```
 
 ## Arguments
 
 - x:
 
-  an object of class `MarkovChain`.
+  A `MarkovChain` object.
 
 - fun:
 
-  the function to apply on each estimated MarkovChain.
+  A function accepting a fitted `MarkovChain` as argument `x`.
 
 - k:
 
-  integer. The number of trajectories.
+  A positive integer giving the number of trajectories.
 
 - m:
 
-  integer. The length of trajectories.
+  An integer of at least two giving the number of states observed per
+  trajectory (`m - 1` transitions).
 
 - ...:
 
-  extra arguments.
+  Additional arguments passed to `fun`.
+
+- n_workers:
+
+  A positive integer giving the maximum number of PSOCK workers. Set to
+  one for sequential execution.
 
 ## Value
 
-A vector holding the combined return values of `fun` for each chain.
+The results of `fun` combined with
+[`c()`](https://rdrr.io/r/base/c.html) in simulation order. For one
+trajectory, the result of `fun` is returned directly.
+
+## Details
+
+Each fit estimates the transition matrix with [`fit()`](fit.md) and
+retains the initial distribution from `x`. An error is raised if any
+trajectory omits a state, because the fit would have a smaller state
+space. Choose a trajectory length that gives adequate coverage of the
+states.
+
+Use [`set.seed()`](https://rdrr.io/r/base/Random.html) before calling
+this function for reproducible simulations with a fixed worker count.
+For parallel execution, `fun` and its arguments must be usable in a
+fresh R session with the package installed.
+
+## See also
+
+[`sim()`](sim.md), [`fit()`](fit.md)
 
 ## Examples
 
 ``` r
-# Choose the transition probability matrix and the initial law of the MC
-a <- c(0.5, 0.5, 0)
-P <- matrix(c(0.3, 0.7, 0,
-              0.6, 0.1, 0.3,
-              0.5, 0,   0.5), nrow = 3, ncol = 3, byrow = TRUE)
-
-# Create a Markov Chain
-x <- MarkovChain(a = a, P = P)
-
-# Find Stationary distribution
-pi_vec <- stat(x)
-
-# Simulate a single trajectory of length m
-m <- 1e4
-traj <- sim(m, x)
-
-# Estimate the transition probability matrix
-y <- fit(traj)
-
-# Make a list of Markov Chains
-L <- MarkovChainList(list(x, y))
-L[[1]]
-#> Markov Chain
-#>   Number of states: 3 
-#> 
-#>   Initial distribution (a):
-#>       1   2   3 
-#>     0.5 0.5 0.0 
-#> 
-#>   Transition matrix (P):
-#>         1   2   3
-#>     1 0.3 0.7 0.0
-#>     2 0.6 0.1 0.3
-#>     3 0.5 0.0 0.5
+P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
+x <- MarkovChain(c(1, 0), P)
+set.seed(1)
+estim_parallel(x, mttf, k = 4, m = 200, up = 1, n_workers = 1)
+#> [1] 5.000000 5.619048 4.346154 4.360000
 ```

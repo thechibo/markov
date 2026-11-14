@@ -58,7 +58,7 @@ U}Q\_{ij}G\_{ij}^2\right\\.\$\$ This avoids a dense transition
 covariance and subtractive cancellation.
 
 At positive times Theorem 7 requires \\R(t-1)\>0\\; an error is raised
-when this condition fails, even though [`bmp()`](bmp.md) defines the
+when this condition fails, even though [`bmpf()`](bmpf.md) defines the
 rate as zero there. At time zero the variance is zero because the
 initial distribution is fixed. Full operational sets also have zero
 variance.
@@ -73,14 +73,15 @@ chains*. Communications in Statistics - Theory and Methods, 31(10),
 
 ## See also
 
-[`bmp()`](bmp.md), [`vcov_rel()`](vcov_rel.md), [`vcov_p()`](vcov_p.md)
+[`bmpf()`](bmpf.md), [`vcov_rel()`](vcov_rel.md),
+[`vcov_p()`](vcov_p.md)
 
 ## Examples
 
 ``` r
 P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
 x <- MarkovChain(c(0.4, 0.6), P)
-bmp(x, time = 0:3, up = 1L)
+bmpf(x, time = 0:3, up = 1L)
 #> [1] 0.6 0.2 0.2 0.2
 vcov_bmp(x, time = 3L, up = 1L)
 #> [1] 0.2666667

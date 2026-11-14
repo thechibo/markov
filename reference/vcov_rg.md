@@ -65,14 +65,14 @@ chains*. Communications in Statistics - Theory and Methods, 31(10),
 
 ## See also
 
-[`rg()`](rg.md), [`vcov_bmp()`](vcov_bmp.md)
+[`rgf()`](rgf.md), [`vcov_bmp()`](vcov_bmp.md)
 
 ## Examples
 
 ``` r
 P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
 x <- MarkovChain(c(0.4, 0.6), P)
-rg(x, time = 0:3, up = 1L)
+rgf(x, time = 0:3, up = 1L)
 #> [1] 0.9162907 0.2231436 0.2231436 0.2231436
 vcov_rg(x, time = 3L, up = 1L)
 #> [1] 0.4166667
