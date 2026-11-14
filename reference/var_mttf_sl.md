@@ -19,12 +19,18 @@ deriv_psi(x, up)
 
 - up:
 
-  Integer or character vector giving the up (operational) states.
+  Nonempty integer-valued numeric vector of state positions, or
+  character vector of state names, giving the operational states.
+  Entries must be distinct and select a proper subset of the states.
+  Input order is ignored; states are used in their order in `x`.
 
 ## Value
 
-A numeric scalar containing the asymptotic variance of the MTTF
-estimator.
+`var_mttf_sl()` returns a numeric scalar containing the asymptotic
+variance. `deriv_psi()` returns a numeric vector of length
+`length(up)^2`, containing the derivatives with respect to the
+operational transition block in row-wise order, with operational states
+ordered as in `x`.
 
 ## Details
 
@@ -35,9 +41,17 @@ internal testing only.
 
 ## References
 
-A. Sadek and N. Limnios (2002). *Asymptotic properties of estimators for
-nonhomogeneous Markov chains*. Statistics & Probability Letters, 60(4),
-1839–1850. See Theorem 8 (p. 1852) for the MTTF.
+Gavrilopoulos, G., Trevezas, S., and Votsi, I. (2026). *Matrix
+asymptotic calculus for plug-in maximum likelihood estimators in finite
+Markov chains*. arXiv preprint arXiv:2607.17161.
+<https://arxiv.org/abs/2607.17161>. See Proposition 11 for the MTTF
+differential and asymptotic variance.
+
+Sadek, A., and Limnios, N. (2002). *Asymptotic properties for maximum
+likelihood estimators for reliability and failure rates of Markov
+chains*. Communications in Statistics - Theory and Methods, 31(10),
+1837–1861.
+[doi:10.1081/STA-120014916](https://doi.org/10.1081/STA-120014916) .
 
 ## See also
 

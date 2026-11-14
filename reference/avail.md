@@ -20,12 +20,14 @@ avail(x, time, up)
 
 - time:
 
-  A positive integer vector giving the discrete time points \\t\\ at
-  which availability \\A(t)\\ is evaluated.
+  A nonempty positive integer vector giving the discrete time points
+  \\t\\ at which availability \\A(t)\\ is evaluated.
 
 - up:
 
-  Integer or character vector giving the up (operational) states.
+  Integer-valued numeric vector of state positions or character vector
+  of state names giving the operational states. Missing values are not
+  allowed. Duplicates are ignored; empty and full state sets are valid.
 
 ## Value
 
@@ -40,47 +42,21 @@ For each time \\t\\, the function computes \$\$ A(t) = a P^t
 \\P\\ is the transition matrix, and \\\mathbf{1}\_{\mathcal{U}}\\ is the
 indicator vector of the operational states.
 
-Duplicate values in `up` are ignored.
+Duplicate values in `up` are ignored. Powers are computed by repeated
+real matrix multiplication with [`Ppowers()`](Ppowers.md).
 
 ## See also
 
-[`MarkovChain()`](MarkovChain.md), [`Ppower()`](Ppower.md)
+[`MarkovChain()`](MarkovChain.md), [`Ppowers()`](Ppowers.md),
+[`vcov_avail()`](vcov_avail.md)
 
 ## Examples
 
 ``` r
-# Choose the transition probability matrix and the initial law of the MC
-a <- c(0.5, 0.5, 0)
-P <- matrix(c(0.3, 0.7, 0,
-              0.6, 0.1, 0.3,
-              0.5, 0,   0.5), nrow = 3, ncol = 3, byrow = TRUE)
-
-# Create a Markov Chain
-x <- MarkovChain(a = a, P = P)
-
-# Find Stationary distribution
-pi_vec <- stat(x)
-
-# Simulate a single trajectory of length m
-m <- 1e4
-traj <- sim(m, x)
-
-# Estimate the transition probability matrix
-y <- fit(traj)
-
-# Make a list of Markov Chains
-L <- MarkovChainList(list(x, y))
-L[[1]]
-#> Markov Chain
-#>   Number of states: 3 
-#> 
-#>   Initial distribution (a):
-#>       1   2   3 
-#>     0.5 0.5 0.0 
-#> 
-#>   Transition matrix (P):
-#>         1   2   3
-#>     1 0.3 0.7 0.0
-#>     2 0.6 0.1 0.3
-#>     3 0.5 0.0 0.5
+P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
+x <- MarkovChain(c(0.4, 0.6), P)
+avail(x, time = 1:3, up = 1L)
+#> [1] 0.500 0.550 0.575
+vcov_avail(x, time = 3L, up = 1L)
+#> [1] 0.5953125
 ```

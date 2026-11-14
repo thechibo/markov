@@ -1,7 +1,8 @@
-# Estimate a Markov chain from an observed state sequence
+# Estimate a Markov Chain from One or More Trajectories
 
 Estimates a time-homogeneous, discrete-time Markov chain from an
-observed sequence of states.
+observed sequence of states or independent trajectories sharing a
+transition matrix.
 
 ## Usage
 
@@ -13,9 +14,11 @@ fit(x, init = "realized")
 
 - x:
 
-  An atomic vector or factor of observed states in time order. Must have
-  no dimensions, have length at least 2, and contain no `NA`s. State
-  labels must be non-empty.
+  An atomic vector or factor of observed states in time order, or an
+  atomic matrix with one independent trajectory per row and observation
+  times in columns. Each trajectory must have at least two observations;
+  matrices must have at least one row. Missing values are not allowed.
+  State labels must be non-empty.
 
 - init:
 
@@ -28,8 +31,8 @@ fit(x, init = "realized")
 
   `"realized"`
 
-  :   Degenerate distribution concentrated on the first observed state
-      `x[1]`. This is the default choice.
+  :   Empirical distribution of the initial states across paths; for one
+      path, concentrated on its first state. This is the default choice.
 
   `"stationary"`
 
@@ -42,13 +45,16 @@ A `MarkovChain` object.
 
 ## Details
 
-The state space is defined as `unique(x)`. If `x` is numeric or ordered,
-the states are sorted; otherwise, the first-appearance order is used.
-Numeric state labels use additional precision when needed to distinguish
-values with identical default character representations.
+The state space consists of the distinct observed values, reading matrix
+rows in order. If `x` is numeric or ordered, the states are sorted;
+otherwise, the first-appearance order is used. Numeric state labels use
+additional precision when needed to distinguish values with identical
+default character representations.
 
 The function computes the empirical transition frequencies and
-normalizes by row to obtain a transition probability matrix.
+normalizes by row to obtain a transition probability matrix. Counts are
+pooled over paths; no transitions are counted between the end of one
+path and the next path.
 
 If a state never appears as an origin (i.e., it is never observed at
 times `t = 1, ..., n-1`), the corresponding transition row has no
