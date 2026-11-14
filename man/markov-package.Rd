@@ -4,11 +4,11 @@
 \name{markov-package}
 \alias{markov}
 \alias{markov-package}
-\title{markov: Hidden Markov Models Inference}
+\title{markov: Discrete Time Markov Chains}
 \description{
 \if{html}{\figure{logo.svg}{options: style='float: right' alt='logo' width='120'}}
 
-This package performs statistical inference on HMM along with reliability indicators.
+This package performs statistical inference on Markov Chains along with reliability indicators.
 }
 \seealso{
 Useful links:

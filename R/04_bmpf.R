@@ -30,10 +30,10 @@
 #' @examples
 #' P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
 #' x <- MarkovChain(c(0.4, 0.6), P)
-#' bmp(x, time = 0:3, up = 1L)
+#' bmpf(x, time = 0:3, up = 1L)
 #' vcov_bmp(x, time = 3L, up = 1L)
 #' @export
-bmp <- function(x, time, up) {
+bmpf <- function(x, time, up) {
   x <- validate_MarkovChain(x)
   validate_rel_time(time)
   up <- validate_avail_up(up, get_state_names(x))
@@ -69,7 +69,7 @@ bmp <- function(x, time, up) {
 #' This avoids a dense transition covariance and subtractive cancellation.
 #'
 #' At positive times Theorem 7 requires \eqn{R(t-1)>0}; an error is raised
-#' when this condition fails, even though [bmp()] defines the rate as zero
+#' when this condition fails, even though [bmpf()] defines the rate as zero
 #' there. At time zero the variance is zero because the initial distribution
 #' is fixed. Full operational sets also have zero variance.
 #'
@@ -78,8 +78,8 @@ bmp <- function(x, time, up) {
 #'   \eqn{n} to approximate the estimator variance. This is a pointwise
 #'   variance, not a joint covariance across times.
 #' @inherit rel references
-#' @seealso [bmp()], [vcov_rel()], [vcov_p()]
-#' @inherit bmp examples
+#' @seealso [bmpf()], [vcov_rel()], [vcov_p()]
+#' @inherit bmpf examples
 #' @export
 vcov_bmp <- function(x, time, up) {
   x <- validate_MarkovChain(x)

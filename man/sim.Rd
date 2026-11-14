@@ -2,50 +2,42 @@
 % Please edit documentation in R/02_sim.R
 \name{sim}
 \alias{sim}
-\title{Simulate a Markov Chain Trajectory}
+\title{Simulate Markov Chain Trajectories}
 \usage{
-sim(m, x)
+sim(m, x, n = 1)
 }
 \arguments{
-\item{m}{Positive integer. The desired trajectory length.}
+\item{m}{A single positive integer giving the number of observations per
+trajectory, including the initial state.}
 
 \item{x}{A \code{MarkovChain} object.}
+
+\item{n}{A single positive integer giving the number of trajectories.}
 }
 \value{
-A factor of length \code{m} giving the visited states in order. Levels correspond
-to the state labels (from \code{names(x$a)} or \code{rownames(x$P)} if available).
+If \code{n = 1}, an ordered factor of length \code{m} with one level per state in
+chain order. If \code{n > 1}, an \code{n} by \code{m} character matrix of state labels,
+with one trajectory per row and observations in time order across columns.
+Pass a matrix with at least two columns directly to \code{\link[=fit]{fit()}} to pool its
+within-trajectory transitions.
 }
 \description{
-Generate a single sample path of length \code{m} from a finite-state,
-time-homogeneous Markov chain.
+Generate one or more independent sample paths from a
+finite-state, time-homogeneous Markov chain.
 }
 \details{
-The initial state is drawn from the chain's initial distribution \code{a}, and
-subsequent states are generated iteratively using the transition matrix \code{P}.
+Each trajectory starts with a fresh draw from the initial distribution
+\code{x$a}. Each subsequent state is drawn from the row of \code{x$P} for the
+current state. Simulating multiple paths with a fixed random seed gives
+the same draws as successive single-path calls with that seed.
 }
 \examples{
-# Choose the transition probability matrix and the initial law of the MC
-a <- c(0.5, 0.5, 0)
-P <- matrix(c(0.3, 0.7, 0,
-              0.6, 0.1, 0.3,
-              0.5, 0,   0.5), nrow = 3, ncol = 3, byrow = TRUE)
-
-# Create a Markov Chain
-x <- MarkovChain(a = a, P = P)
-
-# Find Stationary distribution
-pi_vec <- stat(x)
-
-# Simulate a single trajectory of length m
-m <- 1e4
-traj <- sim(m, x)
-
-# Estimate the transition probability matrix
-y <- fit(traj)
-
-# Make a list of Markov Chains
-L <- MarkovChainList(list(x, y))
-L[[1]]
+P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
+x <- MarkovChain(a = c(0.5, 0.5), P = P)
+set.seed(1)
+sim(m = 5, x = x)
+paths <- sim(m = 20, x = x, n = 10)
+fit(paths)
 }
 \seealso{
 \code{\link[=MarkovChain]{MarkovChain()}}, \code{\link[=fit]{fit()}}, \code{\link[=stat]{stat()}}

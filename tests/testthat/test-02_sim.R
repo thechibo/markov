@@ -157,3 +157,43 @@ test_that("sim() requires m to be a positive integer", {
                               paste(value, collapse = ", ")))
   }
 })
+
+test_that("sim() returns independent paths in rows in seeded draw order", {
+  states <- c("z", "a")
+  P <- matrix(c(0.7, 0.3, 0.2, 0.8), 2, byrow = TRUE,
+              dimnames = list(states, states))
+  chain <- MarkovChain(c(z = 0.4, a = 0.6), P)
+
+  set.seed(123)
+  paths <- sim(m = 7, x = chain, n = 4)
+  set.seed(123)
+  expect_identical(paths, t(replicate(4, as.character(sim(7, chain)))))
+  expect_identical(dim(paths), c(4L, 7L))
+
+  set.seed(123)
+  path <- sim(7, chain, n = 1)
+  expect_identical(path, ordered(paths[1L, ], levels = states))
+})
+
+test_that("sim() returns paths that fit() can pool without crossing boundaries", {
+  P <- matrix(c(0, 1, 1, 0), 2, byrow = TRUE,
+              dimnames = list(c("A", "B"), c("A", "B")))
+  chain <- MarkovChain(c(A = 1, B = 0), P)
+  paths <- sim(3, chain, n = 5)
+
+  expect_identical(paths, matrix(rep(c("A", "B", "A"), each = 5), 5, 3))
+  expect_identical(fit(paths), chain)
+  expect_identical(sim(1, chain, n = 5), matrix("A", nrow = 5, ncol = 1))
+
+  single_state <- MarkovChain(c(only = 1), matrix(1, dimnames = list("only", "only")))
+  expect_identical(sim(4, single_state, n = 3), matrix("only", 3, 4))
+})
+
+test_that("sim() requires n to be a single positive integer", {
+  chain <- MarkovChain(c(1, 0), matrix(c(0, 1, 1, 0), 2, byrow = TRUE))
+  invalid <- list(0, -1, 1.5, NA_real_, NaN, Inf, "5", TRUE, NULL,
+                  numeric(), c(2, 3), matrix(2), .Machine$integer.max + 1)
+  for (n in invalid) {
+    expect_error(sim(5, chain, n = n), "`n` must be a single positive integer")
+  }
+})

@@ -50,14 +50,14 @@ With \eqn{G} the row-wise reshape of \eqn{g_t}, \eqn{Q=P_{UU}},
 This avoids a dense transition covariance and subtractive cancellation.
 
 At positive times Theorem 7 requires \eqn{R(t-1)>0}; an error is raised
-when this condition fails, even though \code{\link[=bmp]{bmp()}} defines the rate as zero
+when this condition fails, even though \code{\link[=bmpf]{bmpf()}} defines the rate as zero
 there. At time zero the variance is zero because the initial distribution
 is fixed. Full operational sets also have zero variance.
 }
 \examples{
 P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
 x <- MarkovChain(c(0.4, 0.6), P)
-bmp(x, time = 0:3, up = 1L)
+bmpf(x, time = 0:3, up = 1L)
 vcov_bmp(x, time = 3L, up = 1L)
 }
 \references{
@@ -67,5 +67,5 @@ Communications in Statistics - Theory and Methods, 31(10), 1837--1861.
 \doi{10.1081/STA-120014916}.
 }
 \seealso{
-\code{\link[=bmp]{bmp()}}, \code{\link[=vcov_rel]{vcov_rel()}}, \code{\link[=vcov_p]{vcov_p()}}
+\code{\link[=bmpf]{bmpf()}}, \code{\link[=vcov_rel]{vcov_rel()}}, \code{\link[=vcov_p]{vcov_p()}}
 }

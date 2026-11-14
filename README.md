@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# markov
+# markov <img src="man/figures/logo.png" align="right" width="120" alt="markov package logo" />
 
 <!-- badges: start -->
 
@@ -12,11 +12,16 @@ coverage](https://codecov.io/gh/thechibo/markov/graph/badge.svg)](https://app.co
 
 ## Introduction
 
-The `markov` R package develops…
+The `markov` R package provides tools for statistical inference on
+finite, discrete-time Markov chains and the analysis of system
+reliability.
 
 ### Key Features
 
-The package’s key features are…
+- Simulation and estimation of Markov chains.
+- Transition probabilities and stationary distributions.
+- Reliability, availability, and maintainability measures.
+- Hypothesis testing and uncertainty estimation.
 
 ## Installation
 
@@ -47,14 +52,14 @@ in the package vignette
 
 The `markov` package is developed and maintained by:
 
-- [Ioannis
-  Oikonomidis](http://users.uoa.gr/~goikon/ "Ioannis Oikonomidis Homepage") -
-  Department of Mathematics, National and Kapodistrian University of
-  Athens
 - [Irene
   Votsi](https://votsiire.jimdofree.com/ "Irene Votsi Homepage") - LIEC,
   CNRS, Université de Lorraine
 - [Samis
   Trevezas](http://scholar.uoa.gr/strevezas/ "Samis Trevezas Homepage") -
+  Department of Mathematics, National and Kapodistrian University of
+  Athens
+- [Ioannis
+  Oikonomidis](http://users.uoa.gr/~goikon/ "Ioannis Oikonomidis Homepage") -
   Department of Mathematics, National and Kapodistrian University of
   Athens

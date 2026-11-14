@@ -2,48 +2,49 @@
 % Please edit documentation in R/05_parallel.R
 \name{estim_parallel}
 \alias{estim_parallel}
-\title{Parallel Estimation}
+\title{Simulate and Estimate Markov Chain Functionals}
 \usage{
-estim_parallel(x, fun, k = 1000, m = 500, ...)
+estim_parallel(x, fun, k = 1000, m = 500, ..., n_workers = 2L)
 }
 \arguments{
-\item{x}{an object of class \code{MarkovChain}.}
+\item{x}{A \code{MarkovChain} object.}
 
-\item{fun}{the function to apply on each estimated MarkovChain.}
+\item{fun}{A function accepting a fitted \code{MarkovChain} as argument \code{x}.}
 
-\item{k}{integer. The number of trajectories.}
+\item{k}{A positive integer giving the number of trajectories.}
 
-\item{m}{integer. The length of trajectories.}
+\item{m}{An integer of at least two giving the number of states observed per
+trajectory (\code{m - 1} transitions).}
 
-\item{...}{extra arguments.}
+\item{...}{Additional arguments passed to \code{fun}.}
+
+\item{n_workers}{A positive integer giving the maximum number of PSOCK
+workers. Set to one for sequential execution.}
 }
 \value{
-A vector holding the combined return values of \code{fun} for each chain.
+The results of \code{fun} combined with \code{\link[=c]{c()}} in simulation order. For
+one trajectory, the result of \code{fun} is returned directly.
 }
 \description{
-Simulate \code{k} trajectories of length \code{m} and apply \code{fun}.
+Simulate independent trajectories, fit a Markov chain to each trajectory,
+and apply a function to each fit.
+}
+\details{
+Each fit estimates the transition matrix with \code{\link[=fit]{fit()}} and retains the
+initial distribution from \code{x}. An error is raised if any trajectory omits
+a state, because the fit would have a smaller state space. Choose a
+trajectory length that gives adequate coverage of the states.
+
+Use \code{\link[=set.seed]{set.seed()}} before calling this function for reproducible simulations
+with a fixed worker count. For parallel execution, \code{fun} and its arguments
+must be usable in a fresh R session with the package installed.
 }
 \examples{
-# Choose the transition probability matrix and the initial law of the MC
-a <- c(0.5, 0.5, 0)
-P <- matrix(c(0.3, 0.7, 0,
-              0.6, 0.1, 0.3,
-              0.5, 0,   0.5), nrow = 3, ncol = 3, byrow = TRUE)
-
-# Create a Markov Chain
-x <- MarkovChain(a = a, P = P)
-
-# Find Stationary distribution
-pi_vec <- stat(x)
-
-# Simulate a single trajectory of length m
-m <- 1e4
-traj <- sim(m, x)
-
-# Estimate the transition probability matrix
-y <- fit(traj)
-
-# Make a list of Markov Chains
-L <- MarkovChainList(list(x, y))
-L[[1]]
+P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
+x <- MarkovChain(c(1, 0), P)
+set.seed(1)
+estim_parallel(x, mttf, k = 4, m = 200, up = 1, n_workers = 1)
+}
+\seealso{
+\code{\link[=sim]{sim()}}, \code{\link[=fit]{fit()}}
 }

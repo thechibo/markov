@@ -48,7 +48,7 @@ ratios can produce an asymptotic variance exceeding the numeric range.
 \examples{
 P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
 x <- MarkovChain(c(0.4, 0.6), P)
-rg(x, time = 0:3, up = 1L)
+rgf(x, time = 0:3, up = 1L)
 vcov_rg(x, time = 3L, up = 1L)
 }
 \references{
@@ -58,5 +58,5 @@ Communications in Statistics - Theory and Methods, 31(10), 1837--1861.
 \doi{10.1081/STA-120014916}.
 }
 \seealso{
-\code{\link[=rg]{rg()}}, \code{\link[=vcov_bmp]{vcov_bmp()}}
+\code{\link[=rgf]{rgf()}}, \code{\link[=vcov_bmp]{vcov_bmp()}}
 }

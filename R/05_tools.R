@@ -858,10 +858,3 @@ I_minus_P <- function(P, states) {
   diag(A) <- rowSums(off_diagonal)
   A
 }
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Parallel                         ----
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-`%dopar%` <- foreach::`%dopar%`
-`%do%` <- foreach::`%do%`

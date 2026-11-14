@@ -1,0 +1,93 @@
+% Adapted from the official JSS Sweave article template:
+% https://www.jstatsoft.org/public/journals/1/jss-article-rnw.zip
+% Style guide: https://www.jstatsoft.org/style (accessed 2026-11-14).
+% Use [article] instead of [article,nojss] for the journal submission.
+% Build in R from this directory:
+% utils::Sweave("markov-jss.Rnw")
+% tools::texi2pdf("markov-jss.tex")
+% Extract replication code with utils::Stangle("markov-jss.Rnw").
+\documentclass[article,nojss]{jss}
+
+% \VignetteIndexEntry{markov: JSS manuscript}
+% \VignetteEngine{utils::Sweave}
+% \VignetteEncoding{UTF-8}
+
+% JSS supplies the Sweave environments; do not load Sweave.sty.
+% R supplies jss.cls, jss.bst, and the JSS logo in its texmf tree.
+\SweaveOpts{engine=R, eps=FALSE, pdf=TRUE, keep.source=TRUE, concordance=FALSE}
+<<preliminaries, echo=FALSE, results=hide>>=
+options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE)
+@
+
+% Complete the manuscript metadata as the article is developed.
+% Before submission, supply a title, authors/affiliations, abstract,
+% at least one keyword, and a correspondence address.
+% Separate authors with \And; include primary affiliations with \\.
+\author{}
+\Plainauthor{}
+\title{\pkg{markov}}
+\Plaintitle{markov}
+\Shorttitle{\pkg{markov}}
+\Abstract{}
+\Keywords{}
+\Plainkeywords{}
+\Address{}
+
+\begin{document}
+
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{Package scope}
+\label{sec:package-scope}
+
+\subsection{Literature review}
+\label{sec:literature-review}
+
+\subsection{Package innovation}
+\label{sec:package-innovation}
+
+\section{Core package functionalities}
+\label{sec:core-functionalities}
+
+\subsection{Markov chains}
+\label{sec:markov-chains}
+
+\subsection{Reliability}
+\label{sec:reliability}
+
+\subsection{Hypothesis testing}
+\label{sec:hypothesis-testing}
+
+\subsection{Bootstrap CI}
+\label{sec:bootstrap-ci}
+
+\section{Illustrative applications}
+\label{sec:applications}
+
+\subsection[opasque2]{\code{opasque2}}
+\label{sec:opasque2}
+
+\subsection{Agronomic dataset}
+\label{sec:agronomic-dataset}
+
+\subsection{Earthquake dataset}
+\label{sec:earthquake-dataset}
+
+\section{Performance}
+\label{sec:performance}
+
+\subsection{Efficiency}
+\label{sec:efficiency}
+
+\subsection{Edge cases}
+\label{sec:edge-cases}
+
+\section{Discussion and conclusion}
+\label{sec:discussion}
+
+% Enable when the first citations and BibTeX entries are added.
+% The jss class selects the JSS bibliography style automatically.
+% \bibliography{markov-jss}
+
+\end{document}

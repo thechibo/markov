@@ -16,27 +16,27 @@
 #' When the reliability ratio is defined, this equals
 #' \eqn{-\log(1-\lambda(t))}, with BMP rate \eqn{\lambda(t)}.
 #' The implementation reuses the normalized survival recursion underlying
-#' [bmp()], avoiding underflow of the raw reliability powers. It uses
+#' [bmpf()], avoiding underflow of the raw reliability powers. It uses
 #' `log1p()` for small failure probabilities and the directly computed
 #' conditional survival probability when the BMP rate is close to one.
 #' The initial distribution is treated as fixed.
 #'
 #' If \eqn{R(t-1)>0} but \eqn{R(t)=0}, the rate is `Inf`. If both are
 #' zero, the defining ratio is undefined and `NaN` is returned, rather
-#' than applying the zero-rate convention of [bmp()]. At time zero,
+#' than applying the zero-rate convention of [bmpf()]. At time zero,
 #' \eqn{R(0)=0} gives `Inf`. Full operational sets have rate zero.
 #'
 #' @return A numeric vector of the same length and order as `time`,
 #'   containing RG rates, with `Inf` and `NaN` as described above.
 #' @inherit rel references
-#' @seealso [bmp()], [rel()], [vcov_rg()]
+#' @seealso [bmpf()], [rel()], [vcov_rg()]
 #' @examples
 #' P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
 #' x <- MarkovChain(c(0.4, 0.6), P)
-#' rg(x, time = 0:3, up = 1L)
+#' rgf(x, time = 0:3, up = 1L)
 #' vcov_rg(x, time = 3L, up = 1L)
 #' @export
-rg <- function(x, time, up) {
+rgf <- function(x, time, up) {
   x <- validate_MarkovChain(x)
   validate_rel_time(time)
   up <- validate_avail_up(up, get_state_names(x))
@@ -78,8 +78,8 @@ rg <- function(x, time, up) {
 #'   \eqn{n} to approximate the estimator variance. This is a pointwise
 #'   variance, not a joint covariance across times.
 #' @inherit rel references
-#' @seealso [rg()], [vcov_bmp()]
-#' @inherit rg examples
+#' @seealso [rgf()], [vcov_bmp()]
+#' @inherit rgf examples
 #' @export
 vcov_rg <- function(x, time, up) {
   x <- validate_MarkovChain(x)
