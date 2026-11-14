@@ -1,6 +1,6 @@
 Package: markov
 Title: Discrete Time Markov Chains
-Version: 0.3.1
+Version: 0.3.2
 Authors@R: c(
     person("Irene", "Votsi", , "Eirini.Votsi@univ-lorraine.fr ", role = "aut",
            comment = c(ORCID = "0000-0002-7397-2025")),

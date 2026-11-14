@@ -46,6 +46,14 @@ jobs:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
 
+      - uses: r-lib/actions/setup-tinytex@v2
+
+      # Sweave does not automatically install missing LaTeX packages.
+      - name: Install JSS vignette LaTeX dependencies
+        run: |
+          tlmgr update --self
+          tlmgr install latex graphics xcolor fancyvrb natbib hyperref upquote lm
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck

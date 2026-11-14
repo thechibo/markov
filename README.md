@@ -5,6 +5,10 @@
 
 <!-- badges: start -->
 
+[![License: GPL \>=
+3](https://img.shields.io/badge/License-GPL%20%3E%3D%203-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![R-CMD-check](https://github.com/thechibo/markov/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/thechibo/markov/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
 coverage](https://codecov.io/gh/thechibo/markov/graph/badge.svg)](https://app.codecov.io/gh/thechibo/markov)
