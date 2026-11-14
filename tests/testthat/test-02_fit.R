@@ -7,12 +7,42 @@ test_that("fit() rejects invalid observation sequences", {
     fit(c("a", NA_character_)),
     "contains NA values"
   )
-  for (x in list(matrix(1:4, nrow = 2), array(1:4, 4), list("a", "b"))) {
+  for (x in list(array(1:4, 4), list("a", "b"))) {
     expect_error(fit(x), "must be an atomic vector")
   }
   for (x in list(c("a", ""), factor(c("", "a")))) {
     expect_error(fit(x), "State labels in `x` must be .*non-empty")
   }
+})
+
+test_that("fit pools paths without between-path transitions", {
+  x <- rbind(c("b", "a", "a"), c("a", "b", "b"), c("a", "a", "b"))
+  fitted <- fit(x)
+  expect_equal(as.numeric(fitted$a), c(1 / 3, 2 / 3))
+  expect_equal(rownames(fitted$P), c("b", "a"))
+  expect_equal(unname(unclass(fitted$P)), matrix(0.5, 2, 2))
+  expect_equal(as.numeric(fit(x, "uniform")$a), c(0.5, 0.5))
+  expect_equal(as.numeric(fit(x, "stationary")$a), c(0.5, 0.5))
+  expect_equal(fit(matrix(x[1, ], nrow = 1)), fit(x[1, ]))
+  expect_equal(fit(matrix(1, 3, 4))$a, StochVec(c("1" = 1)))
+  expect_warning(terminal <- fit(rbind(c(10, 20), c(10, 20))), "absorbing")
+  expect_equal(as.numeric(terminal$a), c(1, 0))
+  expect_equal(unname(unclass(terminal$P)), matrix(c(0, 1, 0, 1), 2, byrow = TRUE))
+  close <- c(1, 1 + 1e-15)
+  expect_equal(nrow(fit(rbind(close, rev(close)))$P), 2L)
+})
+
+test_that("trajectory matrices are validated without coercion", {
+  x <- matrix(c("a", "b", "b", "a"), 2)
+  expect_identical(validate_trajectories(x), x)
+  f <- factor(c("a", "b"))
+  expect_identical(validate_trajectories(f), f)
+  for (bad in list(matrix(numeric(), 0, 3), matrix(1, 3, 1), matrix(1, 2, 0))) {
+    expect_error(fit(bad), "at least one row and two columns")
+  }
+  expect_error(fit(matrix(c(1, NA, 2, 1), 2)), "NA values")
+  expect_error(fit(matrix(list(1, 2, 1, 2), 2)), "atomic vector")
+  expect_error(fit(array(1, c(2, 2, 2))), "atomic vector")
 })
 
 test_that("fit() requires exactly one valid init value", {

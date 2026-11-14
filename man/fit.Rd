@@ -2,20 +2,22 @@
 % Please edit documentation in R/02_fit.R
 \name{fit}
 \alias{fit}
-\title{Estimate a Markov chain from an observed state sequence}
+\title{Estimate a Markov Chain from One or More Trajectories}
 \usage{
 fit(x, init = "realized")
 }
 \arguments{
-\item{x}{An atomic vector or factor of observed states in time order.
-Must have no dimensions, have length at least 2, and contain no \code{NA}s.
+\item{x}{An atomic vector or factor of observed states in time order, or
+an atomic matrix with one independent trajectory per row and observation
+times in columns. Each trajectory must have at least two observations;
+matrices must have at least one row. Missing values are not allowed.
 State labels must be non-empty.}
 
 \item{init}{Initial distribution to attach to the fitted Markov chain.
 Must be exactly one of:
 \describe{
 \item{\code{"uniform"}}{Uniform distribution over the observed state space.}
-\item{\code{"realized"}}{Degenerate distribution concentrated on the first observed state \code{x[1]}. This is the default choice.}
+\item{\code{"realized"}}{Empirical distribution of the initial states across paths; for one path, concentrated on its first state. This is the default choice.}
 \item{\code{"stationary"}}{Stationary distribution implied by the estimated transition matrix (via \code{stat()}).}
 }}
 }
@@ -24,16 +26,18 @@ A \code{MarkovChain} object.
 }
 \description{
 Estimates a time-homogeneous, discrete-time Markov chain from an observed
-sequence of states.
+sequence of states or independent trajectories sharing a transition matrix.
 }
 \details{
-The state space is defined as \code{unique(x)}. If \code{x} is numeric or ordered, the
+The state space consists of the distinct observed values, reading matrix
+rows in order. If \code{x} is numeric or ordered, the
 states are sorted; otherwise, the first-appearance order is used.
 Numeric state labels use additional precision when needed to distinguish
 values with identical default character representations.
 
 The function computes the empirical transition frequencies and normalizes by
-row to obtain a transition probability matrix.
+row to obtain a transition probability matrix. Counts are pooled over paths;
+no transitions are counted between the end of one path and the next path.
 
 If a state never appears as an origin (i.e., it is never observed at times
 \verb{t = 1, ..., n-1}), the corresponding transition row has no empirical counts.

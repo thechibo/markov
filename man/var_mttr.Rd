@@ -9,18 +9,31 @@ var_mttr(x, down)
 \arguments{
 \item{x}{An object of class \code{MarkovChain}.}
 
-\item{down}{Integer or character vector giving the down (non-operational)
-states.}
+\item{down}{Nonempty integer-valued numeric vector of state positions, or
+character vector of state names, giving the non-operational states.
+Entries must be distinct and select a proper subset of the states.
+Input order is ignored; states are used in their order in \code{x}.}
 }
 \value{
-A numeric scalar giving the expected number of discrete-time transitions
-before the chain first enters a state outside \code{down}.
+A numeric scalar containing the asymptotic variance \eqn{\sigma_\psi^2}
+of the MTTR estimator. This is the variance in the \eqn{\sqrt{n}} limit;
+the approximate variance of the estimator itself is \eqn{\sigma_\psi^2/n}.
 }
 \description{
 Computes the asymptotic variance of the plug-in estimator of the mean time
 to recovery (MTTR) for a finite-state Markov chain.
 }
 \details{
+These functions use \code{\link[=mttf]{mttf()}} and \code{\link[=var_mttf]{var_mttf()}} with \code{down} as the selected
+state set. The non-operational subchain must be transient, so that
+\eqn{I_d-P_{\mathcal{D},\mathcal{D}}} is invertible. The asymptotic
+variance additionally requires an irreducible chain and treats the initial
+distribution as fixed.
+
+The initial probabilities on \code{down} are not renormalized. Paths starting
+outside \code{down} have recovery time zero; to compute the mean conditional on
+starting down, supply an initial distribution supported on \code{down}.
+
 Let \eqn{\mathcal{D}} denote the set of non-operational states,
 \eqn{P_{\mathcal{D},\mathcal{D}}} be the submatrix of transition
 probabilities between non-operational states, \eqn{d=|\mathcal{D}|}, and
@@ -75,29 +88,23 @@ The MTTR \eqn{\psi} is returned by \code{\link[=mttr]{mttr()}}.
 The asymptotic variance \eqn{\sigma_\psi^2} is returned by this function.
 }
 \examples{
-# Choose the transition probability matrix and the initial law of the MC
-a <- c(0.5, 0.5, 0)
-P <- matrix(c(0.3, 0.7, 0,
-              0.6, 0.1, 0.3,
-              0.5, 0,   0.5), nrow = 3, ncol = 3, byrow = TRUE)
+P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
+dimnames(P) <- list(c("working", "failed"), c("working", "failed"))
+x <- MarkovChain(c(working = 0, failed = 1), P)
+mttr(x, down = "failed")
+var_mttr(x, down = "failed")
+}
+\references{
+Gavrilopoulos, G., Trevezas, S., and Votsi, I. (2026).
+\emph{Matrix asymptotic calculus for plug-in maximum likelihood estimators in finite Markov chains}.
+arXiv preprint arXiv:2607.17161. \url{https://arxiv.org/abs/2607.17161}.
+See Proposition 11 for the MTTR differential and asymptotic variance.
 
-# Create a Markov Chain
-x <- MarkovChain(a = a, P = P)
-
-# Find Stationary distribution
-pi_vec <- stat(x)
-
-# Simulate a single trajectory of length m
-m <- 1e4
-traj <- sim(m, x)
-
-# Estimate the transition probability matrix
-y <- fit(traj)
-
-# Make a list of Markov Chains
-L <- MarkovChainList(list(x, y))
-L[[1]]
+Sadek, A., and Limnios, N. (2002).
+\emph{Asymptotic properties for maximum likelihood estimators for reliability and failure rates of Markov chains}.
+Communications in Statistics - Theory and Methods, 31(10), 1837--1861.
+\doi{10.1081/STA-120014916}.
 }
 \seealso{
-\code{\link[=mttf]{mttf()}}, \code{\link[=var_mttr]{var_mttr()}}
+\code{\link[=mttr]{mttr()}}, \code{\link[=var_mttf]{var_mttf()}}
 }

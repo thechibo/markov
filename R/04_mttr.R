@@ -6,14 +6,26 @@
 #'
 #' @description
 #' Computes the mean time to recovery of a discrete-time, finite-state Markov
-#' chain. Revocery is defined as the first time the chain leaves the set of
-#' operational states specified by `down`.
+#' chain. Recovery is defined as the first time the chain leaves the set of
+#' non-operational states specified by `down`.
 #'
 #' @param x An object of class \code{MarkovChain}.
-#' @param down Integer or character vector giving the down (non-operational)
-#' states.
+#' @param down Nonempty integer-valued numeric vector of state positions, or
+#'   character vector of state names, giving the non-operational states.
+#'   Entries must be distinct and select a proper subset of the states.
+#'   Input order is ignored; states are used in their order in `x`.
 #'
 #' @details
+#' These functions use [mttf()] and [var_mttf()] with `down` as the selected
+#' state set. The non-operational subchain must be transient, so that
+#' \eqn{I_d-P_{\mathcal{D},\mathcal{D}}} is invertible. The asymptotic
+#' variance additionally requires an irreducible chain and treats the initial
+#' distribution as fixed.
+#'
+#' The initial probabilities on `down` are not renormalized. Paths starting
+#' outside `down` have recovery time zero; to compute the mean conditional on
+#' starting down, supply an initial distribution supported on `down`.
+#'
 #' Let \eqn{\mathcal{D}} denote the set of non-operational states,
 #' \eqn{P_{\mathcal{D},\mathcal{D}}} be the submatrix of transition
 #' probabilities between non-operational states, \eqn{d=|\mathcal{D}|}, and
@@ -71,10 +83,17 @@
 #' A numeric scalar giving the expected number of discrete-time transitions
 #' before the chain first enters a state outside `down`.
 #'
+#' @inherit var_mttr references
+#'
 #' @seealso [mttf()], [var_mttr()]
 #'
 #' @export
-#' @inherit MarkovChain examples
+#' @examples
+#' P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
+#' dimnames(P) <- list(c("working", "failed"), c("working", "failed"))
+#' x <- MarkovChain(c(working = 0, failed = 1), P)
+#' mttr(x, down = "failed")
+#' var_mttr(x, down = "failed")
 mttr <- function(x, down) {
   mttf(x, down)
 }
@@ -86,10 +105,22 @@ mttr <- function(x, down) {
 #' to recovery (MTTR) for a finite-state Markov chain.
 #'
 #' @param x An object of class \code{MarkovChain}.
-#' @param down Integer or character vector giving the down (non-operational)
-#' states.
+#' @param down Nonempty integer-valued numeric vector of state positions, or
+#'   character vector of state names, giving the non-operational states.
+#'   Entries must be distinct and select a proper subset of the states.
+#'   Input order is ignored; states are used in their order in `x`.
 #'
 #' @details
+#' These functions use [mttf()] and [var_mttf()] with `down` as the selected
+#' state set. The non-operational subchain must be transient, so that
+#' \eqn{I_d-P_{\mathcal{D},\mathcal{D}}} is invertible. The asymptotic
+#' variance additionally requires an irreducible chain and treats the initial
+#' distribution as fixed.
+#'
+#' The initial probabilities on `down` are not renormalized. Paths starting
+#' outside `down` have recovery time zero; to compute the mean conditional on
+#' starting down, supply an initial distribution supported on `down`.
+#'
 #' Let \eqn{\mathcal{D}} denote the set of non-operational states,
 #' \eqn{P_{\mathcal{D},\mathcal{D}}} be the submatrix of transition
 #' probabilities between non-operational states, \eqn{d=|\mathcal{D}|}, and
@@ -144,13 +175,30 @@ mttr <- function(x, down) {
 #' The asymptotic variance \eqn{\sigma_\psi^2} is returned by this function.
 #'
 #' @return
-#' A numeric scalar giving the expected number of discrete-time transitions
-#' before the chain first enters a state outside `down`.
+#' A numeric scalar containing the asymptotic variance \eqn{\sigma_\psi^2}
+#' of the MTTR estimator. This is the variance in the \eqn{\sqrt{n}} limit;
+#' the approximate variance of the estimator itself is \eqn{\sigma_\psi^2/n}.
 #'
-#' @seealso [mttf()], [var_mttr()]
+#' @references
+#' Gavrilopoulos, G., Trevezas, S., and Votsi, I. (2026).
+#' \emph{Matrix asymptotic calculus for plug-in maximum likelihood estimators in finite Markov chains}.
+#' arXiv preprint arXiv:2607.17161. \url{https://arxiv.org/abs/2607.17161}.
+#' See Proposition 11 for the MTTR differential and asymptotic variance.
+#'
+#' Sadek, A., and Limnios, N. (2002).
+#' \emph{Asymptotic properties for maximum likelihood estimators for reliability and failure rates of Markov chains}.
+#' Communications in Statistics - Theory and Methods, 31(10), 1837--1861.
+#' \doi{10.1081/STA-120014916}.
+#'
+#' @seealso [mttr()], [var_mttf()]
 #'
 #' @export
-#' @inherit MarkovChain examples
+#' @examples
+#' P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
+#' dimnames(P) <- list(c("working", "failed"), c("working", "failed"))
+#' x <- MarkovChain(c(working = 0, failed = 1), P)
+#' mttr(x, down = "failed")
+#' var_mttr(x, down = "failed")
 var_mttr <- function(x, down) {
   var_mttf(x, down)
 }

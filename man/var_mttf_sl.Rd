@@ -12,10 +12,16 @@ deriv_psi(x, up)
 \arguments{
 \item{x}{An object of class \code{MarkovChain}.}
 
-\item{up}{Integer or character vector giving the up (operational) states.}
+\item{up}{Nonempty integer-valued numeric vector of state positions, or
+character vector of state names, giving the operational states. Entries
+must be distinct and select a proper subset of the states. Input order
+is ignored; states are used in their order in \code{x}.}
 }
 \value{
-A numeric scalar containing the asymptotic variance of the MTTF estimator.
+\code{var_mttf_sl()} returns a numeric scalar containing the asymptotic variance.
+\code{deriv_psi()} returns a numeric vector of length \code{length(up)^2}, containing
+the derivatives with respect to the operational transition block in
+row-wise order, with operational states ordered as in \code{x}.
 }
 \description{
 Computes the asymptotic variance of the mean-time-to-failure estimator
@@ -27,10 +33,15 @@ implementation, this function follows the corresponding scalar or
 component-wise expressions. It is used for internal testing only.
 }
 \references{
-A. Sadek and N. Limnios (2002).
-\emph{Asymptotic properties of estimators for nonhomogeneous Markov chains}.
-Statistics & Probability Letters, 60(4), 1839–1850.
-See Theorem 8 (p. 1852) for the MTTF.
+Gavrilopoulos, G., Trevezas, S., and Votsi, I. (2026).
+\emph{Matrix asymptotic calculus for plug-in maximum likelihood estimators in finite Markov chains}.
+arXiv preprint arXiv:2607.17161. \url{https://arxiv.org/abs/2607.17161}.
+See Proposition 11 for the MTTF differential and asymptotic variance.
+
+Sadek, A., and Limnios, N. (2002).
+\emph{Asymptotic properties for maximum likelihood estimators for reliability and failure rates of Markov chains}.
+Communications in Statistics - Theory and Methods, 31(10), 1837--1861.
+\doi{10.1081/STA-120014916}.
 }
 \seealso{
 \code{\link[=mttf]{mttf()}}, \code{\link[=var_mttf]{var_mttf()}}

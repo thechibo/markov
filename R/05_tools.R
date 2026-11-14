@@ -3,6 +3,38 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Trajectory Validation            ----
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Validate an observed trajectory without coercing its values or attributes.
+validate_trajectories <- function(x) {
+  if (!is.matrix(x) && length(x) < 2) {
+    stop("`x` must have length >= 2 to estimate transitions.")
+  }
+  if (!is.atomic(x) || (!is.null(dim(x)) && !is.matrix(x))) {
+    stop("`x` must be an atomic vector or matrix of observed states.",
+         call. = FALSE)
+  }
+  if (is.matrix(x) && (nrow(x) < 1L || ncol(x) < 2L)) {
+    stop("`x` must have at least one row and two columns.", call. = FALSE)
+  }
+  if (anyNA(x)) {
+    stop("`x` contains NA values.", call. = FALSE)
+  }
+  x
+}
+
+# Common indexing for one path or matrix rows, without between-path transitions.
+trajectory_data <- function(x) {
+  values <- if (is.matrix(x)) as.vector(t(x)) else x
+  width <- if (is.matrix(x)) ncol(x) else length(x)
+  first <- seq.int(1L, length(values), by = width)
+  last <- first + width - 1L
+  list(values = values, first = first,
+       from = seq_along(values)[-last], to = seq_along(values)[-first])
+}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # State Names                      ----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -811,6 +843,20 @@ as_positive_integer <- function(m) {
     )
   }
   as.integer(m)
+}
+
+# Construct I - P[states, states] for a validated stochastic matrix and
+# distinct character state names, preserving their supplied order.
+# Sum all off-diagonal probabilities, including transitions outside the
+# selected block, to avoid cancellation in 1 - P[i, i].
+I_minus_P <- function(P, states) {
+  off_diagonal <- P[states, , drop = FALSE]
+  diagonal_indices <- cbind(seq_along(states), match(states, colnames(P)))
+  off_diagonal[diagonal_indices] <- 0
+
+  A <- -P[states, states, drop = FALSE]
+  diag(A) <- rowSums(off_diagonal)
+  A
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

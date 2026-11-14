@@ -10,9 +10,17 @@
 #' operational states specified by `up`.
 #'
 #' @param x An object of class \code{MarkovChain}.
-#' @param up Integer or character vector giving the up (operational) states.
+#' @param up Nonempty integer-valued numeric vector of state positions, or
+#'   character vector of state names, giving the operational states. Entries
+#'   must be distinct and select a proper subset of the states. Input order
+#'   is ignored; states are used in their order in `x`.
 #'
 #' @details
+#' The operational subchain must be transient, so that
+#' \eqn{I_r-P_{\mathcal{U},\mathcal{U}}} is invertible. The asymptotic
+#' variance additionally requires an irreducible chain and treats the initial
+#' distribution as fixed.
+#'
 #' Let \eqn{\mathcal{U}} denote the set of operational states,
 #' \eqn{P_{\mathcal{U},\mathcal{U}}} be the submatrix of transition
 #' probabilities between operational states, \eqn{r=|\mathcal{U}|}, and
@@ -70,24 +78,24 @@
 #' A numeric scalar giving the expected number of discrete-time transitions
 #' before the chain first enters a state outside `up`.
 #'
+#' @inherit var_mttf references
+#'
 #' @seealso [avail()] for the time-dependent availability function.
 #'
 #' @export
-#' @inherit MarkovChain examples
+#' @examples
+#' P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
+#' x <- MarkovChain(c(1, 0), P)
+#' mttf(x, up = 1)
+#' var_mttf(x, up = 1)
 mttf <- function(x, up) {
 
-  # Preliminary Checks
-  if (!inherits(x, "MarkovChain")) {
-    stop("`x` must be a `MarkovChain` object.", call. = FALSE)
-  }
-  up <- as.character(up)
-  if (!all(up %in% get_state_names(x))) {
-    stop("`up` must be a vector of state names or indices.", call. = FALSE)
-  }
+  x <- validate_MarkovChain(x)
+  up <- validate_mttf_up(up, get_state_names(x))
 
   r <- length(up)
   vec_ones <- rep(1, r)
-  B <- solve(diag(r) - x$P[up, up])
+  B <- solve(I_minus_P(x$P, up))
   as.numeric(x$a[up] %*% B %*% vec_ones)
 
 }
@@ -99,9 +107,17 @@ mttf <- function(x, up) {
 #' to failure (MTTF) for a finite-state Markov chain.
 #'
 #' @param x An object of class \code{MarkovChain}.
-#' @param up Integer or character vector giving the up (operational) states.
+#' @param up Nonempty integer-valued numeric vector of state positions, or
+#'   character vector of state names, giving the operational states. Entries
+#'   must be distinct and select a proper subset of the states. Input order
+#'   is ignored; states are used in their order in `x`.
 #'
 #' @details
+#' The operational subchain must be transient, so that
+#' \eqn{I_r-P_{\mathcal{U},\mathcal{U}}} is invertible. The asymptotic
+#' variance additionally requires an irreducible chain and treats the initial
+#' distribution as fixed.
+#'
 #' Let \eqn{\mathcal{U}} denote the set of operational states,
 #' \eqn{P_{\mathcal{U},\mathcal{U}}} be the submatrix of transition
 #' probabilities between operational states, \eqn{r=|\mathcal{U}|}, and
@@ -160,32 +176,29 @@ mttf <- function(x, up) {
 #' the MTTF estimator.
 #'
 #' @references
-#' GSI
+#' Gavrilopoulos, G., Trevezas, S., and Votsi, I. (2026).
+#' \emph{Matrix asymptotic calculus for plug-in maximum likelihood estimators in finite Markov chains}.
+#' arXiv preprint arXiv:2607.17161. \url{https://arxiv.org/abs/2607.17161}.
+#' See Proposition 11 for the MTTF differential and asymptotic variance.
 #'
-#' A. Sadek and N. Limnios (2002).
-#' \emph{Asymptotic properties of estimators for nonhomogeneous Markov chains}.
-#' Statistics & Probability Letters, 60(4), 1839–1850.
-#' See Theorem 8 (p. 1852) for the MTTF.
+#' Sadek, A., and Limnios, N. (2002).
+#' \emph{Asymptotic properties for maximum likelihood estimators for reliability and failure rates of Markov chains}.
+#' Communications in Statistics - Theory and Methods, 31(10), 1837--1861.
+#' \doi{10.1081/STA-120014916}.
 #'
 #' @seealso [mttf()]
 #'
 #' @export
 var_mttf <- function(x, up) {
 
-  # Preliminary Checks
-  if (!inherits(x, "MarkovChain")) {
-    stop("`x` must be a `MarkovChain` object.", call. = FALSE)
-  }
-  up <- as.character(up)
-  if (!all(up %in% get_state_names(x))) {
-    stop("`up` must be a vector of state names or indices.", call. = FALSE)
-  }
+  x <- validate_MarkovChain(x)
+  up <- validate_mttf_up(up, get_state_names(x))
 
   s <- nstates(x)
   r <- length(up)
   vec_ones <- rep(1, r)
   state_names <- get_state_names(x)
-  Nu <- solve(diag(r) - x$P[up, up])
+  Nu <- solve(I_minus_P(x$P, up))
 
   M <- kp(x$a[up] %*% Nu, t(vec_ones) %*% t(Nu))
 
@@ -212,18 +225,29 @@ var_mttf <- function(x, up) {
 #' component-wise expressions. It is used for internal testing only.
 #'
 #' @return
-#' A numeric scalar containing the asymptotic variance of the MTTF estimator.
+#' `var_mttf_sl()` returns a numeric scalar containing the asymptotic variance.
+#' `deriv_psi()` returns a numeric vector of length `length(up)^2`, containing
+#' the derivatives with respect to the operational transition block in
+#' row-wise order, with operational states ordered as in `x`.
 #'
 #' @references
-#' A. Sadek and N. Limnios (2002).
-#' \emph{Asymptotic properties of estimators for nonhomogeneous Markov chains}.
-#' Statistics & Probability Letters, 60(4), 1839–1850.
-#' See Theorem 8 (p. 1852) for the MTTF.
+#' Gavrilopoulos, G., Trevezas, S., and Votsi, I. (2026).
+#' \emph{Matrix asymptotic calculus for plug-in maximum likelihood estimators in finite Markov chains}.
+#' arXiv preprint arXiv:2607.17161. \url{https://arxiv.org/abs/2607.17161}.
+#' See Proposition 11 for the MTTF differential and asymptotic variance.
+#'
+#' Sadek, A., and Limnios, N. (2002).
+#' \emph{Asymptotic properties for maximum likelihood estimators for reliability and failure rates of Markov chains}.
+#' Communications in Statistics - Theory and Methods, 31(10), 1837--1861.
+#' \doi{10.1081/STA-120014916}.
 #'
 #' @seealso [mttf()], [var_mttf()]
 #'
 #' @keywords internal
 var_mttf_sl <- function(x, up) {
+
+  x <- validate_MarkovChain(x)
+  up <- validate_mttf_up(up, get_state_names(x))
 
   psi_prime <- deriv_psi(x, up)
   s <- nstates(x)
@@ -241,20 +265,13 @@ var_mttf_sl <- function(x, up) {
 #' @rdname var_mttf_sl
 deriv_psi <- function(x, up) {
 
-  # Preliminary Checks
-  if (!inherits(x, "MarkovChain")) {
-    stop("`x` must be a `MarkovChain` object.", call. = FALSE)
-  }
-  up <- as.character(up)
-  if (!all(up %in% get_state_names(x))) {
-    stop("`up` must be a vector of state names or indices.", call. = FALSE)
-  }
+  x <- validate_MarkovChain(x)
+  up <- validate_mttf_up(up, get_state_names(x))
 
   s1 <- length(up)
   psi_prime <- numeric(s1 ^ 2)
   col_ones <- matrix(1, ncol = 1, nrow = s1)
-  a_up <- x$a[up]
-  Lambda <- solve(diag(s1) - x$P[up, up]) # inverse of (I - P11)
+  Lambda <- solve(I_minus_P(x$P, up))
 
   for (i in 1:(s1 ^ 2)) {
     mat <- matrix(cron(i, s1 ^ 2), nrow = s1, ncol = s1, byrow = TRUE)
@@ -263,4 +280,31 @@ deriv_psi <- function(x, up) {
 
   psi_prime
 
+}
+
+# Normalize positions and names to the chain's order so that the derivative
+# and covariance mask use the same coordinates.
+validate_mttf_up <- function(up, state_names) {
+  if (!is.null(dim(up)) || !(is.numeric(up) || is.character(up)) ||
+      length(up) == 0L || anyNA(up)) {
+    stop("`up` must be a nonempty vector of state names or integer indices.",
+         call. = FALSE)
+  }
+  if (is.numeric(up)) {
+    if (any(!is.finite(up)) || any(up != floor(up)) ||
+        any(up < 1 | up > length(state_names))) {
+      stop("`up` indices must be integers between 1 and the number of states.",
+           call. = FALSE)
+    }
+    up <- state_names[up]
+  } else if (!all(up %in% state_names)) {
+    stop("`up` contains unknown state names.", call. = FALSE)
+  }
+  if (anyDuplicated(up)) {
+    stop("`up` must contain distinct states.", call. = FALSE)
+  }
+  if (length(up) == length(state_names)) {
+    stop("`up` must be a proper subset of the states.", call. = FALSE)
+  }
+  state_names[state_names %in% up]
 }

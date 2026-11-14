@@ -9,7 +9,10 @@ var_mttf(x, up)
 \arguments{
 \item{x}{An object of class \code{MarkovChain}.}
 
-\item{up}{Integer or character vector giving the up (operational) states.}
+\item{up}{Nonempty integer-valued numeric vector of state positions, or
+character vector of state names, giving the operational states. Entries
+must be distinct and select a proper subset of the states. Input order
+is ignored; states are used in their order in \code{x}.}
 }
 \value{
 A numeric scalar containing the asymptotic variance \eqn{\sigma_\psi^2} of
@@ -20,6 +23,11 @@ Computes the asymptotic variance of the plug-in estimator of the mean time
 to failure (MTTF) for a finite-state Markov chain.
 }
 \details{
+The operational subchain must be transient, so that
+\eqn{I_r-P_{\mathcal{U},\mathcal{U}}} is invertible. The asymptotic
+variance additionally requires an irreducible chain and treats the initial
+distribution as fixed.
+
 Let \eqn{\mathcal{U}} denote the set of operational states,
 \eqn{P_{\mathcal{U},\mathcal{U}}} be the submatrix of transition
 probabilities between operational states, \eqn{r=|\mathcal{U}|}, and
@@ -74,12 +82,15 @@ The MTTF \eqn{\psi} is returned by \code{\link[=mttf]{mttf()}}.
 The asymptotic variance \eqn{\sigma_\psi^2} is returned by this function.
 }
 \references{
-GSI
+Gavrilopoulos, G., Trevezas, S., and Votsi, I. (2026).
+\emph{Matrix asymptotic calculus for plug-in maximum likelihood estimators in finite Markov chains}.
+arXiv preprint arXiv:2607.17161. \url{https://arxiv.org/abs/2607.17161}.
+See Proposition 11 for the MTTF differential and asymptotic variance.
 
-A. Sadek and N. Limnios (2002).
-\emph{Asymptotic properties of estimators for nonhomogeneous Markov chains}.
-Statistics & Probability Letters, 60(4), 1839–1850.
-See Theorem 8 (p. 1852) for the MTTF.
+Sadek, A., and Limnios, N. (2002).
+\emph{Asymptotic properties for maximum likelihood estimators for reliability and failure rates of Markov chains}.
+Communications in Statistics - Theory and Methods, 31(10), 1837--1861.
+\doi{10.1081/STA-120014916}.
 }
 \seealso{
 \code{\link[=mttf]{mttf()}}

@@ -9,24 +9,43 @@ vcov_avail(x, time, up)
 \arguments{
 \item{x}{An object of class \code{MarkovChain}.}
 
-\item{time}{Integer scalar. Discrete time step \eqn{time} at which the
-variance of availability is evaluated.}
+\item{time}{A single positive integer giving the time at which the
+asymptotic variance is evaluated.}
 
-\item{up}{Integer or character vector giving the up (operational) states.}
+\item{up}{Integer-valued numeric vector of state positions or character
+vector of state names giving the operational states. Missing values are
+not allowed. Duplicates are ignored; empty and full state sets are valid.}
 }
 \value{
-A numeric scalar: the variance of the availability \eqn{A(n)} at time \eqn{n}
-as defined in Sadek and Limnios (2002).
+A numeric scalar containing the variance in the \eqn{\sqrt{m}} limit
+of the availability estimator, where \eqn{m} is the sample size.
+Divide by \eqn{m} to approximate the variance of the estimator itself.
+This is a pointwise variance, not a joint covariance across times.
 }
 \description{
-Compute the variance of the system availability at discrete time \eqn{n}
-for a finite-state ergodic Markov chain.
+Compute the pointwise asymptotic variance of the plug-in availability
+estimator for an irreducible finite-state Markov chain, treating the
+initial distribution as fixed.
+}
+\details{
+This function evaluates the diagonal entry of Equation (29) for the
+requested time, using the operational-state indicator specified in
+Proposition 9 of Gavrilopoulos, Trevezas, and Votsi (2026). The derivative
+is assembled as a sum of Kronecker products, using real transition powers
+computed once by \code{\link[=Ppowers]{Ppowers()}}. No eigendecomposition or inverse eigenvector
+matrix is required.
+}
+\examples{
+P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
+x <- MarkovChain(c(0.4, 0.6), P)
+avail(x, time = 1:3, up = 1L)
+vcov_avail(x, time = 3L, up = 1L)
+
 }
 \references{
-A. Sadek and N. Limnios (2002).
-\emph{Asymptotic properties of estimators for nonhomogeneous Markov chains}.
-Statistics & Probability Letters, 60(4), 1839–1850.
-See Theorem 5.
+Gavrilopoulos, G., Trevezas, S., and Votsi, I. (2026).
+\emph{Matrix asymptotic calculus for plug-in maximum likelihood estimators in finite Markov chains}.
+arXiv preprint arXiv:2607.17161. \url{https://arxiv.org/abs/2607.17161}.
 }
 \seealso{
 \code{\link[=avail]{avail()}}, \code{\link[=vcov_p]{vcov_p()}}, \code{\link[=vcov_pk]{vcov_pk()}}

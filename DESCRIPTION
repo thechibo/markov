@@ -1,6 +1,6 @@
 Package: markov
 Title: Hidden Markov Models Inference
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(
     person("Irene", "Votsi", , "Eirini.Votsi@univ-lorraine.fr ", role = "aut",
            comment = c(ORCID = "0000-0002-7397-2025")),
@@ -35,4 +35,5 @@ Config/roxygen2/version: 8.0.0
 Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en-US
+LazyData: true
 Roxygen: list(markdown = TRUE)

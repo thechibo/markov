@@ -2,31 +2,35 @@
 # Estimate Markov Chain Parameters                                          ----
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#' Estimate a Markov chain from an observed state sequence
+#' Estimate a Markov Chain from One or More Trajectories
 #'
 #' @description
 #' Estimates a time-homogeneous, discrete-time Markov chain from an observed
-#' sequence of states.
+#' sequence of states or independent trajectories sharing a transition matrix.
 #'
-#' @param x An atomic vector or factor of observed states in time order.
-#'   Must have no dimensions, have length at least 2, and contain no `NA`s.
+#' @param x An atomic vector or factor of observed states in time order, or
+#'   an atomic matrix with one independent trajectory per row and observation
+#'   times in columns. Each trajectory must have at least two observations;
+#'   matrices must have at least one row. Missing values are not allowed.
 #'   State labels must be non-empty.
 #' @param init Initial distribution to attach to the fitted Markov chain.
 #'   Must be exactly one of:
 #'   \describe{
 #'     \item{`"uniform"`}{Uniform distribution over the observed state space.}
-#'     \item{`"realized"`}{Degenerate distribution concentrated on the first observed state `x[1]`. This is the default choice.}
+#'     \item{`"realized"`}{Empirical distribution of the initial states across paths; for one path, concentrated on its first state. This is the default choice.}
 #'     \item{`"stationary"`}{Stationary distribution implied by the estimated transition matrix (via `stat()`).}
 #'   }
 #'
 #' @details
-#' The state space is defined as `unique(x)`. If `x` is numeric or ordered, the
+#' The state space consists of the distinct observed values, reading matrix
+#' rows in order. If `x` is numeric or ordered, the
 #' states are sorted; otherwise, the first-appearance order is used.
 #' Numeric state labels use additional precision when needed to distinguish
 #' values with identical default character representations.
 #'
 #' The function computes the empirical transition frequencies and normalizes by
-#' row to obtain a transition probability matrix.
+#' row to obtain a transition probability matrix. Counts are pooled over paths;
+#' no transitions are counted between the end of one path and the next path.
 #'
 #' If a state never appears as an origin (i.e., it is never observed at times
 #' `t = 1, ..., n-1`), the corresponding transition row has no empirical counts.
@@ -51,20 +55,11 @@ fit <- function(x, init = "realized") {
     )
   }
 
-  # Basic checks
-  if (length(x) < 2) {
-    stop("`x` must have length >= 2 to estimate transitions.")
-  }
-  if (!is.atomic(x) || !is.null(dim(x))) {
-    stop("`x` must be an atomic vector of observed states with no dimensions.",
-         call. = FALSE)
-  }
-  if (anyNA(x)) {
-    stop("`x` contains NA values.", call. = FALSE)
-  }
+  x <- validate_trajectories(x)
+  paths <- trajectory_data(x)
 
   # States (keep stable ordering for numeric/ordered)
-  states <- unique(x)
+  states <- unique(paths$values)
   if (is.numeric(states) || is.ordered(states)) {
     states <- sort(states)
   }
@@ -79,11 +74,11 @@ fit <- function(x, init = "realized") {
     stop("State labels in `x` must be unique, non-missing, and non-empty.",
          call. = FALSE)
   }
-  xf <- factor(match(x, states), levels = seq_len(s), labels = labels)
+  xf <- factor(match(paths$values, states), levels = seq_len(s), labels = labels)
 
   # Transition counts
-  from <- xf[-length(xf)]
-  to   <- xf[-1L]
+  from <- xf[paths$from]
+  to   <- xf[paths$to]
 
   P <- unclass(table(from, to, dnn = NULL))
 
@@ -111,8 +106,8 @@ fit <- function(x, init = "realized") {
     a <- rep(1 / s, s)
     names(a) <- labels
   } else if (init == "realized") {
-    a <- setNames(rep(0, s), labels)
-    a[as.character(xf[1L])] <- 1
+    a <- setNames(tabulate(as.integer(xf[paths$first]), nbins = s) /
+                    length(paths$first), labels)
   } else { # init == "stationary"
     a <- stat(StochMat(P))
     a <- setNames(as.numeric(a), labels)

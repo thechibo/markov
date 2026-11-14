@@ -9,10 +9,12 @@ avail(x, time, up)
 \arguments{
 \item{x}{An object of class \code{MarkovChain}.}
 
-\item{time}{A positive integer vector giving the discrete time points
+\item{time}{A nonempty positive integer vector giving the discrete time points
 \eqn{t} at which availability \eqn{A(t)} is evaluated.}
 
-\item{up}{Integer or character vector giving the up (operational) states.}
+\item{up}{Integer-valued numeric vector of state positions or character
+vector of state names giving the operational states. Missing values are
+not allowed. Duplicates are ignored; empty and full state sets are valid.}
 }
 \value{
 A numeric vector of the same length as \code{time}, where the \eqn{j}-th element
@@ -39,31 +41,15 @@ matrix, and \eqn{\mathbf{1}_{\mathcal{U}}} is the indicator vector of the
 operational states.
 
 Duplicate values in \code{up} are ignored.
+Powers are computed by repeated real matrix multiplication with \code{\link[=Ppowers]{Ppowers()}}.
 }
 \examples{
-# Choose the transition probability matrix and the initial law of the MC
-a <- c(0.5, 0.5, 0)
-P <- matrix(c(0.3, 0.7, 0,
-              0.6, 0.1, 0.3,
-              0.5, 0,   0.5), nrow = 3, ncol = 3, byrow = TRUE)
+P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
+x <- MarkovChain(c(0.4, 0.6), P)
+avail(x, time = 1:3, up = 1L)
+vcov_avail(x, time = 3L, up = 1L)
 
-# Create a Markov Chain
-x <- MarkovChain(a = a, P = P)
-
-# Find Stationary distribution
-pi_vec <- stat(x)
-
-# Simulate a single trajectory of length m
-m <- 1e4
-traj <- sim(m, x)
-
-# Estimate the transition probability matrix
-y <- fit(traj)
-
-# Make a list of Markov Chains
-L <- MarkovChainList(list(x, y))
-L[[1]]
 }
 \seealso{
-\code{\link[=MarkovChain]{MarkovChain()}}, \code{\link[=Ppower]{Ppower()}}
+\code{\link[=MarkovChain]{MarkovChain()}}, \code{\link[=Ppowers]{Ppowers()}}, \code{\link[=vcov_avail]{vcov_avail()}}
 }
