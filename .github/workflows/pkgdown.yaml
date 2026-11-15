@@ -34,23 +34,29 @@ jobs:
         timeout-minutes: 10
 
       # The website also builds the Sweave PDF vignette.
+      # Use the native shell so Windows resolves the tlmgr.bat launcher.
+      - name: Update TeX Live package manager
+        timeout-minutes: 5
+        env:
+          TEXLIVE_DOWNLOADER: curl
+          TEXLIVE_PREFETCH: '0'
+        run: tlmgr update --self
+
       - name: Install JSS vignette LaTeX dependencies
         timeout-minutes: 10
-        shell: bash
         env:
           # Avoid the aria2c background download that stalled on Windows.
           TEXLIVE_DOWNLOADER: curl
           TEXLIVE_PREFETCH: '0'
-        run: |
-          tlmgr update --self
-          tlmgr install latex graphics xcolor fancyvrb natbib hyperref upquote lm grfext
+        # Older R versions ship a JSS class that also requires ae.
+        run: tlmgr install latex graphics xcolor fancyvrb natbib hyperref upquote lm grfext ae
 
       - name: Verify JSS vignette LaTeX dependencies
         timeout-minutes: 2
         shell: bash
         run: |
           pdflatex --version
-          for style in graphicx.sty xcolor.sty fancyvrb.sty natbib.sty hyperref.sty upquote.sty lmodern.sty grfext.sty; do
+          for style in graphicx.sty xcolor.sty fancyvrb.sty natbib.sty hyperref.sty upquote.sty lmodern.sty grfext.sty ae.sty; do
             kpsewhich "$style"
           done
 
