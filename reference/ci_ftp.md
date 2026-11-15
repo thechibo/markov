@@ -1,0 +1,95 @@
+# Asymptotic Confidence Intervals for Failure-Time Probability
+
+Compute two-sided, pointwise normal-approximation confidence intervals
+using [`ftp()`](ftp.md) and [`vcov_ftp()`](vcov_ftp.md).
+
+## Usage
+
+``` r
+ci_ftp(x, time, up, n, level = 0.95)
+```
+
+## Arguments
+
+- x:
+
+  An object of class `MarkovChain`.
+
+- time:
+
+  A nonempty positive integer vector of discrete time points, each less
+  than `.Machine$integer.max`. Missing and infinite values are not
+  allowed.
+
+- up:
+
+  Integer-valued numeric vector of state positions or character vector
+  of state names giving the operational states. Missing values are not
+  allowed. Duplicates are ignored; empty and full state sets are valid.
+  States are used in their order in `x`.
+
+- n:
+
+  A single finite positive integer: the number of observed transitions
+  used to estimate `x$P` (a trajectory of length `n + 1`). Missing
+  values are not allowed.
+
+- level:
+
+  A single finite numeric confidence level strictly between zero and
+  one. Defaults to `0.95`; missing values are not allowed.
+
+## Value
+
+A data frame with numeric columns `estimate`, `std.error`, `lower`, and
+`upper`, giving the point estimate, estimated standard error, and
+confidence limits. There is one row per requested time, preserving order
+and duplicates.
+
+## Details
+
+The asymptotic normality result is Proposition 10 of Gavrilopoulos,
+Trevezas, and Votsi (2026). The domain restrictions of
+[`vcov_ftp()`](vcov_ftp.md) apply.
+
+## Normal approximation
+
+The interval uses the first-order normal approximation for a scalar
+plug-in estimator described in Remark 3 of Gavrilopoulos, Trevezas, and
+Votsi (2026). Supply a chain whose transition matrix is the plug-in
+maximum likelihood estimate from the observed trajectory. The chain must
+be irreducible. The initial distribution is treated as fixed, so its
+estimation uncertainty is not included. The variance function returns
+the variance in the \\\sqrt{n}\\ limit, giving the interval
+\$\$\widehat{\theta} \mathbin{\pm}
+z\_{(1+\mathrm{level})/2}\sqrt{\widehat{\sigma}^2/n}.\$\$ Bounds are not
+clipped to the parameter space. Intervals at multiple times are
+pointwise, not a simultaneous confidence band. Nominal asymptotic
+coverage requires a positive limiting variance and the assumptions of
+the linked variance function. Zero estimated variance produces a
+collapsed interval; this does not establish nominal coverage at a
+degenerate boundary. Nonfinite estimates or variances and negative
+variances produce an error.
+
+## References
+
+Gavrilopoulos, G., Trevezas, S., and Votsi, I. (2026). *Matrix
+asymptotic calculus for plug-in maximum likelihood estimators in finite
+Markov chains*. arXiv preprint arXiv:2607.17161v2.
+<https://arxiv.org/abs/2607.17161v2>.
+
+## See also
+
+[`ftp()`](ftp.md), [`vcov_ftp()`](vcov_ftp.md), [`ci_rel()`](ci_rel.md)
+
+## Examples
+
+``` r
+P <- matrix(c(0.8, 0.2, 0.3, 0.7), 2, byrow = TRUE)
+x <- MarkovChain(c(0.4, 0.6), P)
+ci_ftp(x, time = 1:3, up = 1L, n = 1000)
+#>   estimate   std.error      lower      upper
+#> 1   0.0800 0.006531973 0.06719757 0.09280243
+#> 2   0.0640 0.003919184 0.05631854 0.07168146
+#> 3   0.0512 0.002090231 0.04710322 0.05529678
+```

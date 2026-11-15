@@ -7,14 +7,36 @@
 - [`Ppowers()`](Ppowers.md) : Successive Powers of a Transition Matrix
 - [`avail()`](avail.md) : Availability of a Markov Chain
 - [`bmpf()`](bmpf.md) : BMP Failure Rate of a Markov Chain
+- [`ci_avail()`](ci_avail.md) : Asymptotic Confidence Intervals for
+  Availability
+- [`ci_bmpf()`](ci_bmpf.md) : Asymptotic Confidence Intervals for BMP
+  Failure Rate
+- [`ci_dssc()`](ci_dssc.md) : Asymptotic Confidence Intervals for
+  Down-State Survival
+- [`ci_dti()`](ci_dti.md) : Asymptotic Confidence Intervals for
+  Discrete-Time Intensity
+- [`ci_ftp()`](ci_ftp.md) : Asymptotic Confidence Intervals for
+  Failure-Time Probability
+- [`ci_main()`](ci_main.md) : Asymptotic Confidence Intervals for
+  Maintainability
+- [`ci_mttf()`](ci_mttf.md) : Asymptotic Confidence Intervals for Mean
+  Time to Failure
+- [`ci_mttr()`](ci_mttr.md) : Asymptotic Confidence Intervals for Mean
+  Time to Repair
+- [`ci_rel()`](ci_rel.md) : Asymptotic Confidence Intervals for
+  Reliability
+- [`ci_rgf()`](ci_rgf.md) : Asymptotic Confidence Intervals for RG
+  Failure Rate
+- [`ci_savail()`](ci_savail.md) : Asymptotic Confidence Intervals for
+  Stationary Availability
 - [`cp()`](cp.md) : Matrix Transformed Cross-Product
 - [`cron()`](cron.md) : Kronecker Delta Vector
 - [`dssc()`](dssc.md) : Down-State Survival Curve of a Markov Chain
 - [`dti()`](dti.md) : Discrete-Time Intensity of Hitting Down
-- [`estim_parallel()`](estim_parallel.md) : Simulate and Estimate Markov
-  Chain Functionals
 - [`fit()`](fit.md) : Estimate a Markov Chain from One or More
   Trajectories
+- [`fit_parallel()`](fit_parallel.md) : Simulate and Estimate Markov
+  Chain Functionals
 - [`ftp()`](ftp.md) : Failure-Time Probability of a Markov Chain
 - [`is_com_class()`](is_com_class.md) : Validate a Communicating Class
 - [`is_irreducible()`](is_irreducible.md) : Test Whether a Markov Chain
