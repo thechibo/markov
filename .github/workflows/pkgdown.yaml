@@ -14,6 +14,7 @@ permissions: read-all
 
 jobs:
   pkgdown:
+    timeout-minutes: 60
     runs-on: ubuntu-latest
     # Only restrict concurrency for non-PR jobs
     concurrency:
@@ -30,12 +31,28 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
 
       - uses: r-lib/actions/setup-tinytex@v2
+        timeout-minutes: 10
 
       # The website also builds the Sweave PDF vignette.
       - name: Install JSS vignette LaTeX dependencies
+        timeout-minutes: 10
+        shell: bash
+        env:
+          # Avoid the aria2c background download that stalled on Windows.
+          TEXLIVE_DOWNLOADER: curl
+          TEXLIVE_PREFETCH: '0'
         run: |
           tlmgr update --self
-          tlmgr install latex graphics xcolor fancyvrb natbib hyperref upquote lm
+          tlmgr install latex graphics xcolor fancyvrb natbib hyperref upquote lm grfext
+
+      - name: Verify JSS vignette LaTeX dependencies
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          pdflatex --version
+          for style in graphicx.sty xcolor.sty fancyvrb.sty natbib.sty hyperref.sty upquote.sty lmodern.sty grfext.sty; do
+            kpsewhich "$style"
+          done
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:

@@ -15,6 +15,7 @@ permissions: read-all
 
 jobs:
   R-CMD-check:
+    timeout-minutes: 60
     runs-on: ${{ matrix.config.os }}
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
@@ -47,12 +48,28 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
 
       - uses: r-lib/actions/setup-tinytex@v2
+        timeout-minutes: 10
 
       # Sweave does not automatically install missing LaTeX packages.
       - name: Install JSS vignette LaTeX dependencies
+        timeout-minutes: 10
+        shell: bash
+        env:
+          # Avoid the aria2c background download that stalled on Windows.
+          TEXLIVE_DOWNLOADER: curl
+          TEXLIVE_PREFETCH: '0'
         run: |
           tlmgr update --self
-          tlmgr install latex graphics xcolor fancyvrb natbib hyperref upquote lm
+          tlmgr install latex graphics xcolor fancyvrb natbib hyperref upquote lm grfext
+
+      - name: Verify JSS vignette LaTeX dependencies
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          pdflatex --version
+          for style in graphicx.sty xcolor.sty fancyvrb.sty natbib.sty hyperref.sty upquote.sty lmodern.sty grfext.sty; do
+            kpsewhich "$style"
+          done
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
@@ -60,6 +77,7 @@ jobs:
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
+        timeout-minutes: 30
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
