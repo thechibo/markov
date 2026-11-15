@@ -49,10 +49,15 @@ jobs:
 
       - uses: r-lib/actions/setup-tinytex@v2
         timeout-minutes: 10
+        env:
+          # The larger Windows bundle includes ae, grfext, and upquote;
+          # avoid the tlmgr package installation that hangs on this runner.
+          TINYTEX_INSTALLER: ${{ runner.os == 'Windows' && 'TinyTeX' || 'TinyTeX-1' }}
 
       # Sweave does not automatically install missing LaTeX packages.
-      # Use the native shell so Windows resolves the tlmgr.bat launcher.
+      # Windows gets these packages from the prebuilt bundle above.
       - name: Update TeX Live package manager
+        if: runner.os != 'Windows'
         timeout-minutes: 5
         env:
           TEXLIVE_DOWNLOADER: curl
@@ -60,9 +65,10 @@ jobs:
         run: tlmgr update --self
 
       - name: Install JSS vignette LaTeX dependencies
+        if: runner.os != 'Windows'
         timeout-minutes: 10
         env:
-          # Avoid the aria2c background download that stalled on Windows.
+          # Keep package downloads sequential.
           TEXLIVE_DOWNLOADER: curl
           TEXLIVE_PREFETCH: '0'
         # Older R versions ship a JSS class that also requires ae.
