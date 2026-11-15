@@ -1,26 +1,17 @@
-# Run from the package root. No downloads or additional packages are required.
-# Source snapshots were copied from MarkovExplorer/data; exe/LOC542375.R
-# created the CSV by splitting the first sequence in gene.fna into bases.
-# The original download date was not recorded.
-source_dir <- file.path("data-raw", "opaque2")
-csv <- read.csv(file.path(source_dir, "LOC542375.csv"),
-                stringsAsFactors = FALSE)
-fasta <- readLines(file.path(source_dir, "gene.fna"), warn = FALSE)
-stopifnot(
-  identical(names(csv), c("i", "nucl")),
-  identical(csv$i, seq_len(3158L)),
-  sum(startsWith(fasta, ">")) == 1L,
-  identical(fasta[1L], paste0(
-    ">NC_050102.1:10951530-10954687 LOC542375 ",
-    "[organism=Zea mays] [GeneID=542375] [chromosome=7]"))
+# Run from the package root: Rscript data-raw/opaque2.R
+# Download the plus-strand gene interval from NCBI RefSeq via EFetch.
+refseq_url <- paste0(
+  "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?",
+  "db=nuccore&id=NC_050102.1&strand=1",
+  "&seq_start=10951530&seq_stop=10954687&rettype=fasta&retmode=text"
 )
-opaque2 <- csv$nucl
+fasta <- readLines(refseq_url)
+sequence <- paste0(fasta[-1L], collapse = "")
+opaque2 <- strsplit(sequence, "", fixed = TRUE)[[1L]]
 stopifnot(
-  identical(opaque2, strsplit(paste(fasta[-1L], collapse = ""), "",
-                             fixed = TRUE)[[1L]]),
-  !anyNA(opaque2),
+  startsWith(fasta[1L], ">NC_050102.1:10951530-10954687 "),
+  length(opaque2) == 3158L,
   all(opaque2 %in% c("A", "C", "G", "T"))
 )
-dir.create("data", showWarnings = FALSE)
 save(opaque2, file = file.path("data", "opaque2.rda"),
      compress = "xz", version = 2)

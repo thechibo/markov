@@ -133,6 +133,43 @@ vcov_pk.default <- function(x, k, ...) {
   stop("`x` must be a `MarkovChain` or `StochMat` object.", call. = FALSE)
 }
 
+#' Confidence Intervals for k-Step Transition Probabilities
+#'
+#' Compute a two-sided, pointwise normal-approximation confidence interval
+#' for each entry of the k-step transition matrix \eqn{P^k}.
+#'
+#' @inheritParams ci_p
+#' @param k A single positive integer giving the number of steps.
+#'
+#' @details
+#' The estimates are the entries of the fitted transition matrix raised to
+#' the kth power. The intervals use the diagonal of [vcov_pk()], based on
+#' Proposition 4, Equation (26), of Gavrilopoulos, Trevezas, and Votsi (2026).
+#' The normal approximation follows Remark 3, as in [ci_p()]. For `k = 1`,
+#' the two functions give the same intervals.
+#'
+#' @inheritSection ci_p Pointwise coverage
+#' @inherit ci_p return references
+#' @seealso [ci_p()], [vcov_pk()], [Ppowers()]
+#'
+#' @examples
+#' P <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE))
+#' ci_pk(P, k = 3, n = 1000)
+#' @export
+ci_pk <- function(x, k, n, level = 0.95) {
+  validate_ci_parameters(n, level)
+  P <- ci_transition_matrix(x)
+  variance <- diag(vcov_pk(x, k))
+  Pk <- Ppowers(P, k)[[k + 1L]]
+
+  # Structural zeros and rows with one reachable state have zero variance.
+  # Enforce this before taking square roots to remove covariance roundoff.
+  deterministic <- Pk == 0
+  deterministic[rowSums(Pk > 0) == 1L, ] <- TRUE
+  variance[as.vector(t(deterministic))] <- 0
+  transition_ci(Pk, variance, n, level)
+}
+
 #' @title Reference Implementation of the k-Step Asymptotic Covariance Matrix
 #'
 #' @description

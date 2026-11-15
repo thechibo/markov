@@ -22,10 +22,11 @@ reliability.
 
 ### Key Features
 
-- Simulation and estimation of Markov chains.
-- Transition probabilities and stationary distributions.
-- Reliability, availability, and maintainability measures.
-- Hypothesis testing and uncertainty estimation.
+- Construct and work with a markov chain (simulation, estimation,
+  computation of stationary distribution and others).
+- Calculate reliability measures, their asymptotic variance, and
+  construct asymptotic confidence intervals.
+- Perform hypothesis testing.
 
 ## Installation
 

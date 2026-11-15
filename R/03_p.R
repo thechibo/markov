@@ -175,3 +175,61 @@ transition_covariance_sparse <- function(x, stationary = stationary_for_covarian
   })
   Matrix::bdiag(blocks)
 }
+
+#' Confidence Intervals for Transition Probabilities
+#'
+#' Compute a two-sided, pointwise normal-approximation confidence interval
+#' for each entry of the one-step transition matrix.
+#'
+#' @param x A [MarkovChain()] or [StochMat()] containing the transition
+#'   matrix estimated from a single observed trajectory. The estimated
+#'   chain must be irreducible.
+#' @param n A single finite positive integer giving the number of observed
+#'   one-step transitions used to estimate the transition matrix.
+#' @inheritParams ci_rel
+#'
+#' @details
+#' The intervals use the diagonal of the row-wise asymptotic covariance
+#' matrix from [vcov_p()], as in Theorem 1, Equation (2), of Gavrilopoulos,
+#' Trevezas, and Votsi (2026). The standard errors divide the square roots
+#' of these variances by \eqn{\sqrt{n}} before applying the normal quantile
+#' in Remark 3.
+#'
+#' @section Pointwise coverage:
+#' The confidence level applies to each entry separately. Bounds may extend
+#' outside \eqn{[0,1]}. A zero estimated variance gives a collapsed interval.
+#' Nominal asymptotic coverage requires a positive limiting variance.
+#'
+#' @return A data frame with one row per transition, ordered by origin state
+#'   and then by destination state in matrix order. Character columns
+#'   `from` and `to` identify the states. Numeric columns `estimate`,
+#'   `std.error`, `lower`, and `upper` give the plug-in probability,
+#'   its estimated standard error, and its confidence limits.
+#' @inherit ci_rel references
+#' @seealso [vcov_p()], [ci_pk()]
+#'
+#' @examples
+#' P <- StochMat(matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE))
+#' ci_p(P, n = 1000)
+#' @export
+ci_p <- function(x, n, level = 0.95) {
+  validate_ci_parameters(n, level)
+  P <- ci_transition_matrix(x)
+  transition_ci(P, diag(vcov_p(x)), n, level)
+}
+
+ci_transition_matrix <- function(x) {
+  if (inherits(x, "MarkovChain")) {
+    return(validate_MarkovChain(x)$P)
+  }
+  if (inherits(x, "StochMat")) {
+    return(validate_StochMat(x))
+  }
+  stop("`x` must be a `MarkovChain` or `StochMat` object.", call. = FALSE)
+}
+
+transition_ci <- function(P, variance, n, level) {
+  intervals <- norm_ci(as.vector(t(P)), variance, n, level)
+  data.frame(from = rep(rownames(P), each = ncol(P)),
+             to = rep(colnames(P), times = nrow(P)), intervals)
+}

@@ -10,13 +10,11 @@ encoded as \code{"A"}, \code{"C"}, \code{"G"}, or \code{"T"}, in genomic order. 
 798 A, 755 C, 765 G, and 840 T. There are no missing or ambiguous bases.
 }
 \source{
-National Center for Biotechnology Information (NCBI),
-\href{https://www.ncbi.nlm.nih.gov/gene/542375}{Gene 542375} and
-\href{https://www.ncbi.nlm.nih.gov/nuccore/NC_050102.1}{RefSeq NC_050102.1}.
-NCBI places no restrictions on use or distribution of its molecular data;
-see its \href{https://www.ncbi.nlm.nih.gov/home/about/policies/}{data usage
-policies and disclaimers}, including the qualification concerning rights
-claimed by original submitters.
+Reference Sequence (RefSeq) database, National Center for Biotechnology
+Information (NCBI), U.S. National Library of Medicine, National Institutes
+of Health. See the \href{https://www.ncbi.nlm.nih.gov/nuccore/NC_050102.1}{
+RefSeq chromosome 7 record (NC_050102.1)} and the
+\href{https://www.ncbi.nlm.nih.gov/gene/542375}{NCBI Gene record (542375)}.
 }
 \usage{
 opaque2
@@ -24,35 +22,39 @@ opaque2
 \description{
 The genomic nucleotide sequence of the maize (\emph{Zea mays})
 \emph{opaque endosperm 2} gene, NCBI Gene ID 542375, also known as
-\emph{o2} or \emph{Opaque-2}. This sequence provides an example of observed
-categorical data for fitting a Markov chain.
+\emph{o2} or \emph{Opaque-2}.
 }
 \details{
-The source snapshot identifies the gene as \code{LOC542375} on chromosome 7,
-plus strand, of assembly \code{Zm-B73-REFERENCE-NAM-5.0} (\code{GCF_902167145.1}),
-NCBI Zea mays Annotation Release 103 (2020-08-09). The sequence is the
-inclusive interval 10,951,530--10,954,687 on RefSeq \code{NC_050102.1}.
+The gene is annotated as \code{LOC542375} on chromosome 7 of the maize assembly
+\code{Zm-B73-REFERENCE-NAM-5.0} (\code{GCF_902167145.1}) in NCBI Zea mays Annotation
+Release 103 (2020-08-09). The sequence is the plus strand of the inclusive
+interval 10,951,530--10,954,687 on RefSeq \code{NC_050102.1}.
 Element \eqn{k} corresponds to the one-based chromosome coordinate
-\eqn{10951529 + k}. This is a genomic gene interval, including introns,
-rather than a spliced transcript or a coding-sequence-only record.
-
-The sequence was taken from the \code{LOC542375.csv} file prepared by
-\code{exe/LOC542375.R} in the MarkovExplorer project. The CSV nucleotide column
-was verified against the accompanying \code{gene.fna}; its sequential index
-column is represented by the vector positions. No bases were removed,
-reordered, or recoded. The original download date was not recorded;
-identifiers and coordinates here describe the archived snapshot.
-
-Positions along DNA serve as the sequence index in modelling examples.
-A first-order, time-homogeneous Markov model is an illustrative assumption,
-not a verified biological property of these data. This is one sequence,
-not a collection of independent trajectories for \code{\link[=test_const]{test_const()}}.
+\eqn{10951529 + k}. The genomic interval includes introns.
 }
+\section{Retrieving the sequence}{
+
+The dataset can be retrieved as FASTA from NCBI RefSeq via EFetch using the
+accession, coordinates, and strand specified above.
+}
+
 \examples{
 data(opaque2)
 head(opaque2)
 table(opaque2)
 fit(opaque2)
+
+\dontrun{
+refseq_url <- paste0(
+  "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?",
+  "db=nuccore&id=NC_050102.1&strand=1",
+  "&seq_start=10951530&seq_stop=10954687&rettype=fasta&retmode=text"
+)
+fasta <- readLines(refseq_url)
+sequence <- paste0(fasta[-1L], collapse = "")
+bases <- strsplit(sequence, "", fixed = TRUE)[[1L]]
+stopifnot(identical(bases, opaque2))
+}
 }
 \seealso{
 \code{\link[=fit]{fit()}}, \code{\link[=test_prob]{test_prob()}}
