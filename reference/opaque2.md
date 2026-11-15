@@ -2,8 +2,7 @@
 
 The genomic nucleotide sequence of the maize (*Zea mays*) *opaque
 endosperm 2* gene, NCBI Gene ID 542375, also known as *o2* or
-*Opaque-2*. This sequence provides an example of observed categorical
-data for fitting a Markov chain.
+*Opaque-2*.
 
 ## Usage
 
@@ -19,38 +18,25 @@ encoded as `"A"`, `"C"`, `"G"`, or `"T"`, in genomic order. Counts are
 
 ## Source
 
-National Center for Biotechnology Information (NCBI), [Gene
-542375](https://www.ncbi.nlm.nih.gov/gene/542375) and [RefSeq
-NC_050102.1](https://www.ncbi.nlm.nih.gov/nuccore/NC_050102.1). NCBI
-places no restrictions on use or distribution of its molecular data; see
-its [data usage policies and
-disclaimers](https://www.ncbi.nlm.nih.gov/home/about/policies/),
-including the qualification concerning rights claimed by original
-submitters.
+Reference Sequence (RefSeq) database, National Center for Biotechnology
+Information (NCBI), U.S. National Library of Medicine, National
+Institutes of Health. See the [RefSeq chromosome 7 record
+(NC_050102.1)](https://www.ncbi.nlm.nih.gov/nuccore/NC_050102.1) and the
+[NCBI Gene record (542375)](https://www.ncbi.nlm.nih.gov/gene/542375).
 
 ## Details
 
-The source snapshot identifies the gene as `LOC542375` on chromosome 7,
-plus strand, of assembly `Zm-B73-REFERENCE-NAM-5.0` (`GCF_902167145.1`),
-NCBI Zea mays Annotation Release 103 (2020-08-09). The sequence is the
-inclusive interval 10,951,530–10,954,687 on RefSeq `NC_050102.1`.
+The gene is annotated as `LOC542375` on chromosome 7 of the maize
+assembly `Zm-B73-REFERENCE-NAM-5.0` (`GCF_902167145.1`) in NCBI Zea mays
+Annotation Release 103 (2020-08-09). The sequence is the plus strand of
+the inclusive interval 10,951,530–10,954,687 on RefSeq `NC_050102.1`.
 Element \\k\\ corresponds to the one-based chromosome coordinate
-\\10951529 + k\\. This is a genomic gene interval, including introns,
-rather than a spliced transcript or a coding-sequence-only record.
+\\10951529 + k\\. The genomic interval includes introns.
 
-The sequence was taken from the `LOC542375.csv` file prepared by
-`exe/LOC542375.R` in the MarkovExplorer project. The CSV nucleotide
-column was verified against the accompanying `gene.fna`; its sequential
-index column is represented by the vector positions. No bases were
-removed, reordered, or recoded. The original download date was not
-recorded; identifiers and coordinates here describe the archived
-snapshot.
+## Retrieving the sequence
 
-Positions along DNA serve as the sequence index in modelling examples. A
-first-order, time-homogeneous Markov model is an illustrative
-assumption, not a verified biological property of these data. This is
-one sequence, not a collection of independent trajectories for
-[`test_const()`](test_const.md).
+The dataset can be retrieved as FASTA from NCBI RefSeq via EFetch using
+the accession, coordinates, and strand specified above.
 
 ## See also
 
@@ -80,4 +66,16 @@ fit(opaque2)
 #>     T 0.2321429 0.2857143 0.2214286 0.2607143
 #>     C 0.2860927 0.2860927 0.2264901 0.2013245
 #>     G 0.2496732 0.2300654 0.2797386 0.2405229
+
+if (FALSE) { # \dontrun{
+refseq_url <- paste0(
+  "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?",
+  "db=nuccore&id=NC_050102.1&strand=1",
+  "&seq_start=10951530&seq_stop=10954687&rettype=fasta&retmode=text"
+)
+fasta <- readLines(refseq_url)
+sequence <- paste0(fasta[-1L], collapse = "")
+bases <- strsplit(sequence, "", fixed = TRUE)[[1L]]
+stopifnot(identical(bases, opaque2))
+} # }
 ```

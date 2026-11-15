@@ -23,6 +23,10 @@
   Time to Failure
 - [`ci_mttr()`](ci_mttr.md) : Asymptotic Confidence Intervals for Mean
   Time to Repair
+- [`ci_p()`](ci_p.md) : Confidence Intervals for Transition
+  Probabilities
+- [`ci_pk()`](ci_pk.md) : Confidence Intervals for k-Step Transition
+  Probabilities
 - [`ci_rel()`](ci_rel.md) : Asymptotic Confidence Intervals for
   Reliability
 - [`ci_rgf()`](ci_rgf.md) : Asymptotic Confidence Intervals for RG
