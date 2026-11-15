@@ -154,3 +154,41 @@ bmp_survival <- function(x, time, up, derivative = FALSE) {
   gradient <- as.numeric(exit %*% J) - rep(v, each = r)
   list(rate = rate, survival = survival, gradient = gradient)
 }
+
+#' Asymptotic Confidence Intervals for BMP Failure Rate
+#'
+#' Compute two-sided, pointwise normal-approximation confidence intervals using [bmpf()]
+#' and [vcov_bmp()].
+#' @inheritParams bmpf
+#' @inheritParams ci_rel
+#' @inheritSection ci_rel Normal approximation
+#' @details
+#' The asymptotic normality result is Theorem 7 of Sadek and Limnios (2002).
+#' The domain restrictions of [vcov_bmp()] apply.
+#' @return A data frame with numeric columns `estimate`, `std.error`,
+#'   `lower`, and `upper`, giving the point estimate, estimated standard
+#'   error, and confidence limits.
+#'   There is one row per requested time, preserving order and duplicates.
+#' @references
+#' Gavrilopoulos, G., Trevezas, S., and Votsi, I. (2026).
+#' \emph{Matrix asymptotic calculus for plug-in maximum likelihood estimators in finite Markov chains}.
+#' arXiv preprint arXiv:2607.17161v2. \url{https://arxiv.org/abs/2607.17161v2}.
+#'
+#' Sadek, A., and Limnios, N. (2002).
+#' \emph{Asymptotic properties for maximum likelihood estimators for reliability and failure rates of Markov chains}.
+#' Communications in Statistics - Theory and Methods, 31(10), 1837--1861.
+#' \doi{10.1081/STA-120014916}.
+#' @seealso [bmpf()], [vcov_bmp()], [ci_rel()]
+#' @examples
+#' P <- matrix(c(0.8, 0.2, 0.3, 0.7), 2, byrow = TRUE)
+#' x <- MarkovChain(c(0.4, 0.6), P)
+#' ci_bmpf(x, time = 1:3, up = 1L, n = 1000)
+#' @export
+ci_bmpf <- function(x, time, up, n, level = 0.95) {
+  validate_ci_parameters(n, level)
+  estimate <- bmpf(x, time, up)
+  times <- unique(time)
+  variance <- vapply(times, function(t) vcov_bmp(x, t, up),
+                     numeric(1), USE.NAMES = FALSE)
+  norm_ci(estimate, variance[match(time, times)], n, level)
+}

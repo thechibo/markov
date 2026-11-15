@@ -35,16 +35,10 @@ The `markov` R package provides tools for statistical inference on finite, discr
 
 ## Installation
 
-You can install the release version of `markov` from CRAN by running the following line of code:
-
-```{r, eval=FALSE}
- install.packages("markov")
-```
-
 You can install the development version of `markov` from github by running the following line of code:
 
 ```{r, eval=FALSE}
- devtools::install_github("thechibo/markov")
+ pak::pak("thechibo/markov")
 ```
 
 More details can be found in the [markov Github repository](https://github.com/thechibo/markov "markov Github repository").

@@ -129,3 +129,33 @@ validate_ftp_time <- function(time, scalar = FALSE) {
   }
   invisible(NULL)
 }
+
+#' Asymptotic Confidence Intervals for Failure-Time Probability
+#'
+#' Compute two-sided, pointwise normal-approximation confidence intervals using [ftp()]
+#' and [vcov_ftp()].
+#' @inheritParams ftp
+#' @inheritParams ci_rel
+#' @inheritSection ci_rel Normal approximation
+#' @details
+#' The asymptotic normality result is Proposition 10 of Gavrilopoulos, Trevezas, and Votsi (2026).
+#' The domain restrictions of [vcov_ftp()] apply.
+#' @return A data frame with numeric columns `estimate`, `std.error`,
+#'   `lower`, and `upper`, giving the point estimate, estimated standard
+#'   error, and confidence limits.
+#'   There is one row per requested time, preserving order and duplicates.
+#' @inherit ci_rel references
+#' @seealso [ftp()], [vcov_ftp()], [ci_rel()]
+#' @examples
+#' P <- matrix(c(0.8, 0.2, 0.3, 0.7), 2, byrow = TRUE)
+#' x <- MarkovChain(c(0.4, 0.6), P)
+#' ci_ftp(x, time = 1:3, up = 1L, n = 1000)
+#' @export
+ci_ftp <- function(x, time, up, n, level = 0.95) {
+  validate_ci_parameters(n, level)
+  estimate <- ftp(x, time, up)
+  times <- unique(time)
+  variance <- vapply(times, function(t) vcov_ftp(x, t, up),
+                     numeric(1), USE.NAMES = FALSE)
+  norm_ci(estimate, variance[match(time, times)], n, level)
+}

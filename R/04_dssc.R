@@ -104,3 +104,33 @@ vcov_dssc <- function(x, time, down) {
 vcov_dssc_sl <- function(x, time, down) {
   vcov_rel_sl(x, time = time, up = down)
 }
+
+#' Asymptotic Confidence Intervals for Down-State Survival
+#'
+#' Compute two-sided, pointwise normal-approximation confidence intervals using [dssc()]
+#' and [vcov_dssc()].
+#' @inheritParams dssc
+#' @inheritParams ci_rel
+#' @inheritSection ci_rel Normal approximation
+#' @details
+#' The asymptotic normality result is Proposition 10 of Gavrilopoulos, Trevezas, and Votsi (2026).
+#' The domain restrictions of [vcov_dssc()] apply.
+#' @return A data frame with numeric columns `estimate`, `std.error`,
+#'   `lower`, and `upper`, giving the point estimate, estimated standard
+#'   error, and confidence limits.
+#'   There is one row per requested time, preserving order and duplicates.
+#' @inherit ci_rel references
+#' @seealso [dssc()], [vcov_dssc()], [ci_rel()]
+#' @examples
+#' P <- matrix(c(0.8, 0.2, 0.3, 0.7), 2, byrow = TRUE)
+#' x <- MarkovChain(c(0.4, 0.6), P)
+#' ci_dssc(x, time = 1:3, down = 1L, n = 1000)
+#' @export
+ci_dssc <- function(x, time, down, n, level = 0.95) {
+  validate_ci_parameters(n, level)
+  estimate <- dssc(x, time, down)
+  times <- unique(time)
+  variance <- vapply(times, function(t) vcov_dssc(x, t, down),
+                     numeric(1), USE.NAMES = FALSE)
+  norm_ci(estimate, variance[match(time, times)], n, level)
+}

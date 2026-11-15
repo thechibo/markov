@@ -5,12 +5,12 @@
 #'
 #' @param x A `MarkovChain` object.
 #' @param fun A function accepting a fitted `MarkovChain` as argument `x`.
-#' @param k A positive integer giving the number of trajectories.
+#' @param k A single positive integer giving the number of trajectories.
 #' @param m An integer of at least two giving the number of states observed per
 #'   trajectory (`m - 1` transitions).
 #' @param ... Additional arguments passed to `fun`.
-#' @param n_workers A positive integer giving the maximum number of PSOCK
-#'   workers. Set to one for sequential execution.
+#' @param n_workers A single positive integer giving the maximum number of
+#'   local PSOCK workers. Set to one for sequential execution.
 #'
 #' @details
 #' Each fit estimates the transition matrix with [fit()] and retains the
@@ -19,20 +19,22 @@
 #' trajectory length that gives adequate coverage of the states.
 #'
 #' Use [set.seed()] before calling this function for reproducible simulations
-#' with a fixed worker count. For parallel execution, `fun` and its arguments
-#' must be usable in a fresh R session with the package installed.
+#' with a fixed worker count. Workers use the calling session's library paths.
+#' For parallel execution, `fun` and its arguments must be usable in a fresh
+#' R session with the package installed.
 #'
 #' @return The results of `fun` combined with [c()] in simulation order. For
-#'   one trajectory, the result of `fun` is returned directly.
+#'   example, if each call returns a numeric vector of length `p`, the combined
+#'   result has length `p * k`, with one consecutive block per trajectory.
+#'   For one trajectory, the result of `fun` is returned directly.
 #' @seealso [sim()], [fit()]
-#' @importFrom parallel clusterSetRNGStream makeCluster parLapply stopCluster
 #' @export
 #' @examples
 #' P <- matrix(c(0.8, 0.2, 0.3, 0.7), nrow = 2, byrow = TRUE)
 #' x <- MarkovChain(c(1, 0), P)
 #' set.seed(1)
-#' estim_parallel(x, mttf, k = 4, m = 200, up = 1, n_workers = 1)
-estim_parallel <- function(x, fun, k = 1e3, m = 500, ..., n_workers = 2L) {
+#' fit_parallel(x, mttf, k = 4, m = 200, up = 1, n_workers = 1)
+fit_parallel <- function(x, fun, k = 1e3, m = 500, ..., n_workers = 2L) {
   x <- validate_MarkovChain(x)
   fun <- match.fun(fun)
   check_integer <- function(value, name, minimum = 1L) {
@@ -55,7 +57,9 @@ estim_parallel <- function(x, fun, k = 1e3, m = 500, ..., n_workers = 2L) {
   } else {
     cluster <- parallel::makeCluster(n_workers, type = "PSOCK")
     on.exit(parallel::stopCluster(cluster), add = TRUE)
-    parallel::clusterSetRNGStream(cluster, iseed = sample.int(.Machine$integer.max, 1L))
+    parallel::clusterCall(cluster, .libPaths, .libPaths())
+    seed <- sample.int(.Machine$integer.max, 1L)
+    parallel::clusterSetRNGStream(cluster, iseed = seed)
     results <- parallel::parLapply(cluster, iterations, estimate_trajectory,
                                    chain = x, m = m, callback = fun, args = args)
   }

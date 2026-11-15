@@ -29,18 +29,11 @@ reliability.
 
 ## Installation
 
-You can install the release version of `markov` from CRAN by running the
-following line of code:
-
-``` r
- install.packages("markov")
-```
-
 You can install the development version of `markov` from github by
 running the following line of code:
 
 ``` r
- devtools::install_github("thechibo/markov")
+ pak::pak("thechibo/markov")
 ```
 
 More details can be found in the [markov Github

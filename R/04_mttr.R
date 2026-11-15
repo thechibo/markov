@@ -202,3 +202,30 @@ mttr <- function(x, down) {
 var_mttr <- function(x, down) {
   var_mttf(x, down)
 }
+
+#' Asymptotic Confidence Intervals for Mean Time to Repair
+#'
+#' Compute two-sided, pointwise normal-approximation confidence intervals using [mttr()]
+#' and [var_mttr()].
+#' @inheritParams mttr
+#' @inheritParams ci_rel
+#' @inheritSection ci_rel Normal approximation
+#' @details
+#' The asymptotic normality result is Proposition 11 of Gavrilopoulos, Trevezas, and Votsi (2026).
+#' The domain restrictions of [var_mttr()] apply.
+#' @return A data frame with numeric columns `estimate`, `std.error`,
+#'   `lower`, and `upper`, giving the point estimate, estimated standard
+#'   error, and confidence limits.
+#'   There is one row.
+#' @inherit ci_rel references
+#' @seealso [mttr()], [var_mttr()], [ci_rel()]
+#' @examples
+#' P <- matrix(c(0.8, 0.2, 0.3, 0.7), 2, byrow = TRUE)
+#' x <- MarkovChain(c(0.4, 0.6), P)
+#' ci_mttr(x, down = 1L, n = 1000)
+#' @export
+ci_mttr <- function(x, down, n, level = 0.95) {
+  validate_ci_parameters(n, level)
+  estimate <- mttr(x, down)
+  norm_ci(estimate, var_mttr(x, down), n, level)
+}

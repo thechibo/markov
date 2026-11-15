@@ -308,3 +308,30 @@ validate_mttf_up <- function(up, state_names) {
   }
   state_names[state_names %in% up]
 }
+
+#' Asymptotic Confidence Intervals for Mean Time to Failure
+#'
+#' Compute two-sided, pointwise normal-approximation confidence intervals using [mttf()]
+#' and [var_mttf()].
+#' @inheritParams mttf
+#' @inheritParams ci_rel
+#' @inheritSection ci_rel Normal approximation
+#' @details
+#' The asymptotic normality result is Proposition 11 of Gavrilopoulos, Trevezas, and Votsi (2026).
+#' The domain restrictions of [var_mttf()] apply.
+#' @return A data frame with numeric columns `estimate`, `std.error`,
+#'   `lower`, and `upper`, giving the point estimate, estimated standard
+#'   error, and confidence limits.
+#'   There is one row.
+#' @inherit ci_rel references
+#' @seealso [mttf()], [var_mttf()], [ci_rel()]
+#' @examples
+#' P <- matrix(c(0.8, 0.2, 0.3, 0.7), 2, byrow = TRUE)
+#' x <- MarkovChain(c(0.4, 0.6), P)
+#' ci_mttf(x, up = 1L, n = 1000)
+#' @export
+ci_mttf <- function(x, up, n, level = 0.95) {
+  validate_ci_parameters(n, level)
+  estimate <- mttf(x, up)
+  norm_ci(estimate, var_mttf(x, up), n, level)
+}

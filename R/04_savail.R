@@ -86,3 +86,30 @@ vcov_savail <- function(x, up) {
   Sigma <- vcov_stat(x)
   as.numeric(sum(Sigma[positions, positions, drop = FALSE]))
 }
+
+#' Asymptotic Confidence Intervals for Stationary Availability
+#'
+#' Compute two-sided, pointwise normal-approximation confidence intervals using [savail()]
+#' and [vcov_savail()].
+#' @inheritParams savail
+#' @inheritParams ci_rel
+#' @inheritSection ci_rel Normal approximation
+#' @details
+#' The asymptotic normality result is Proposition 12 of Gavrilopoulos, Trevezas, and Votsi (2026).
+#' The domain restrictions of [vcov_savail()] apply.
+#' @return A data frame with numeric columns `estimate`, `std.error`,
+#'   `lower`, and `upper`, giving the point estimate, estimated standard
+#'   error, and confidence limits.
+#'   There is one row.
+#' @inherit ci_rel references
+#' @seealso [savail()], [vcov_savail()], [ci_rel()]
+#' @examples
+#' P <- matrix(c(0.8, 0.2, 0.3, 0.7), 2, byrow = TRUE)
+#' x <- MarkovChain(c(0.4, 0.6), P)
+#' ci_savail(x, up = 1L, n = 1000)
+#' @export
+ci_savail <- function(x, up, n, level = 0.95) {
+  validate_ci_parameters(n, level)
+  estimate <- savail(x, up)
+  norm_ci(estimate, vcov_savail(x, up), n, level)
+}
