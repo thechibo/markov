@@ -15,12 +15,12 @@ Source:
 [`DESCRIPTION`](https://github.com/thechibo/markov/blob/main/DESCRIPTION)
 
 Votsi I, Trevezas S, Oikonomidis I (2026). *markov: Discrete Time Markov
-Chains*. R package version 0.3.2, <https://thechibo.github.io/markov/>.
+Chains*. R package version 0.3.3, <https://thechibo.github.io/markov/>.
 
     @Manual{,
       title = {markov: Discrete Time Markov Chains},
       author = {Irene Votsi and Samis Trevezas and Ioannis Oikonomidis},
       year = {2026},
-      note = {R package version 0.3.2},
+      note = {R package version 0.3.3},
       url = {https://thechibo.github.io/markov/},
     }
